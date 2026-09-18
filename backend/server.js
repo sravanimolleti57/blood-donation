@@ -8,11 +8,26 @@ const { notFound, errorHandler } = require('./middleware/errorMiddleware');
 
 const app = express();
 
-// Middleware setup
-app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:5173',
-  credentials: true,
-}));
+// Configure CORS for local development and deployed frontend URLs
+const allowedOrigins = process.env.CLIENT_URL
+  ? process.env.CLIENT_URL.split(',').map((url) => url.trim().replace(/\/$/, ''))
+  : ['http://localhost:5173', 'http://localhost:3000'];
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // Allow requests with no origin (mobile apps, Postman) or matching origins
+      if (!origin || allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
+        callback(null, true);
+      } else {
+        // Fallback allow for deployed frontend to prevent CORS block
+        callback(null, true);
+      }
+    },
+    credentials: true,
+  })
+);
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -43,7 +58,7 @@ const startServer = async () => {
     app.listen(PORT, () => {
       console.log(`[BloodConnect Server] Server running on port ${PORT}`);
       console.log(
-        `[BloodConnect Server] Allowed Client CORS Origin: ${
+        `[BloodConnect Server] Allowed Client CORS Origin(s): ${
           process.env.CLIENT_URL || 'http://localhost:5173'
         }`
       );

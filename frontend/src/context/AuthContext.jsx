@@ -13,6 +13,23 @@ export const AuthProvider = ({ children }) => {
 
   const isAuthenticated = !!token && !!user;
 
+  // Helper to extract detailed error messages from Axios exceptions
+  const extractErrorMessage = (error, defaultMsg) => {
+    if (error.response && error.response.data && error.response.data.message) {
+      return error.response.data.message;
+    }
+    if (error.code === 'ERR_NETWORK' || error.message === 'Network Error' || !error.response) {
+      return 'Network Error: Unable to reach BloodConnect backend. Please verify your frontend VITE_API_URL deployment configuration.';
+    }
+    if (error.response && error.response.status === 404) {
+      return '404 Not Found: The API endpoint URL could not be found on the server.';
+    }
+    if (error.response && error.response.status === 500) {
+      return '500 Server Error: Internal error processing request on backend.';
+    }
+    return error.message || defaultMsg;
+  };
+
   // On initial startup, check token & fetch current user profile from server
   useEffect(() => {
     const initAuth = async () => {
@@ -61,7 +78,7 @@ export const AuthProvider = ({ children }) => {
       }
       return { success: false, message: data.message || 'Login failed' };
     } catch (error) {
-      const message = error.response?.data?.message || 'Invalid email or password';
+      const message = extractErrorMessage(error, 'Invalid email or password');
       return { success: false, message };
     } finally {
       setLoading(false);
@@ -82,7 +99,7 @@ export const AuthProvider = ({ children }) => {
       }
       return { success: false, message: data.message || 'Registration failed' };
     } catch (error) {
-      const message = error.response?.data?.message || 'Registration failed. Please check form details.';
+      const message = extractErrorMessage(error, 'Registration failed. Please check form details.');
       return { success: false, message };
     } finally {
       setLoading(false);
