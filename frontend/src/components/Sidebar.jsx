@@ -72,7 +72,7 @@ const Sidebar = () => {
               <img
                 src={user.profileImage || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80'}
                 alt={user.name}
-                className="relative w-10 h-10 rounded-full border-2 border-red-500 object-cover transform group-hover/avatar:scale-105 transition-transform duration-300 shadow-sm"
+                className="relative w-10 h-10 rounded-full border-2 border-red-500 object-cover transform group-hover/avatar:scale-[1.04] transition-transform duration-300 shadow-sm"
               />
             </div>
             <div className="flex flex-col min-w-0">
