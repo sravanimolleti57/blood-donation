@@ -8,7 +8,6 @@ import {
   FiUserPlus,
   FiActivity,
   FiShield,
-  FiPhoneCall,
   FiChevronDown,
   FiChevronUp,
   FiCheckCircle,
@@ -128,89 +127,37 @@ const Home = () => {
       {/* Hero Section */}
       <section className="hero-gradient pt-12 pb-20 border-b border-red-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            
-            {/* Hero Left Content */}
-            <div className="space-y-6 text-center lg:text-left">
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand-100 text-brand-700 text-xs font-semibold border border-brand-200">
-                <FiHeart className="w-3.5 h-3.5 fill-current" />
-                <span>Real-Time Blood Matching Platform</span>
-              </div>
-
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-slate-900 tracking-tight leading-tight">
-                Every Drop Can <span className="text-brand-600 underline decoration-brand-200">Save a Life</span>
-              </h1>
-
-              <p className="text-lg text-slate-600 max-w-xl mx-auto lg:mx-0 leading-relaxed">
-                BloodConnect helps donors, hospitals, and communities connect quickly when blood is needed. Join our mission to bridge critical emergency supply gaps.
-              </p>
-
-              <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2">
-                <Link to="/register">
-                  <Button size="lg" className="w-full sm:w-auto shadow-md">
-                    Become a Donor
-                  </Button>
-                </Link>
-                <Link to="/register?role=hospital">
-                  <Button variant="secondary" size="lg" className="w-full sm:w-auto">
-                    Register Hospital
-                  </Button>
-                </Link>
-              </div>
-
-              <div className="pt-4 flex items-center justify-center lg:justify-start gap-2 text-xs font-semibold text-slate-500">
-                <FiCheckCircle className="w-4 h-4 text-emerald-500" />
-                <span>Connecting people. Supporting communities. Saving lives.</span>
-              </div>
+          <div className="max-w-3xl mx-auto space-y-6 text-center">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand-100 text-brand-700 text-xs font-semibold border border-brand-200">
+              <FiHeart className="w-3.5 h-3.5 fill-current" />
+              <span>Real-Time Blood Matching Platform</span>
             </div>
 
-            {/* Hero Right Visual Card */}
-            <div className="relative flex justify-center">
-              <div className="w-full max-w-md bg-white rounded-3xl p-6 shadow-2xl border border-slate-100 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-brand-100 rounded-full blur-3xl opacity-60"></div>
-                
-                <div className="flex items-center justify-between border-b pb-4 mb-6">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-2xl bg-brand-600 text-white flex items-center justify-center text-2xl font-bold shadow-md">
-                      🩸
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-slate-900">Urgent Request</h3>
-                      <p className="text-xs text-slate-500">City Hospital Emergency Center</p>
-                    </div>
-                  </div>
-                  <span className="px-2.5 py-1 text-xs font-bold text-red-600 bg-red-50 rounded-full border border-red-200 animate-pulse">
-                    HIGH URGENCY
-                  </span>
-                </div>
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-slate-900 tracking-tight leading-tight">
+              Every Drop Can <span className="text-brand-600 underline decoration-brand-200">Save a Life</span>
+            </h1>
 
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
-                    <span className="text-xs font-medium text-slate-600">Required Group:</span>
-                    <BloodGroupBadge bloodGroup="O-" size="lg" />
-                  </div>
+            <p className="text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed">
+              BloodConnect helps donors, hospitals, and communities connect quickly when blood is needed. Join our mission to bridge critical emergency supply gaps.
+            </p>
 
-                  <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
-                    <span className="text-xs font-medium text-slate-600">Units Needed:</span>
-                    <span className="text-sm font-bold text-slate-900">3 Units</span>
-                  </div>
-
-                  <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-3">
-                    <div className="w-3 h-3 rounded-full bg-emerald-500 animate-ping"></div>
-                    <span className="text-xs font-semibold text-emerald-800">
-                      12 Verified Donors Available Nearby
-                    </span>
-                  </div>
-                </div>
-
-                <div className="mt-6 pt-4 border-t text-center">
-                  <Link to="/login" className="text-xs font-bold text-brand-600 hover:text-brand-700">
-                    Sign in to view active emergency requests →
-                  </Link>
-                </div>
-              </div>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
+              <Link to="/register">
+                <Button size="lg" className="w-full sm:w-auto shadow-md">
+                  Become a Donor
+                </Button>
+              </Link>
+              <Link to="/register?role=hospital">
+                <Button variant="secondary" size="lg" className="w-full sm:w-auto">
+                  Register Hospital
+                </Button>
+              </Link>
             </div>
 
+            <div className="pt-4 flex items-center justify-center gap-2 text-xs font-semibold text-slate-500">
+              <FiCheckCircle className="w-4 h-4 text-emerald-500" />
+              <span>Connecting people. Supporting communities. Saving lives.</span>
+            </div>
           </div>
         </div>
       </section>
