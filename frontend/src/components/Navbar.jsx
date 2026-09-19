@@ -52,17 +52,22 @@ const Navbar = () => {
 
           {/* Desktop Navigation Links */}
           <div className="hidden md:flex items-center gap-8">
-            {navLinks.map((link) => (
-              <Link
-                key={link.name}
-                to={link.path}
-                className={`text-sm font-medium transition-colors hover:text-brand-600 ${
-                  location.pathname === link.path ? 'text-brand-600 font-semibold' : 'text-slate-600'
-                }`}
-              >
-                {link.name}
-              </Link>
-            ))}
+            {navLinks.map((link) => {
+              const isActive = location.pathname === link.path;
+              return (
+                <Link
+                  key={link.name}
+                  to={link.path}
+                  className={`relative py-1 text-sm font-semibold transition-colors duration-200 ${
+                    isActive
+                      ? 'text-brand-600 after:absolute after:bottom-[-2px] after:left-0 after:w-full after:h-[2.5px] after:bg-brand-600 after:rounded-full'
+                      : 'text-slate-600 hover:text-brand-600'
+                  }`}
+                >
+                  {link.name}
+                </Link>
+              );
+            })}
           </div>
 
           {/* Desktop Action Buttons */}
