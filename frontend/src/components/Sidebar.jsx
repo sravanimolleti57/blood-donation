@@ -1,6 +1,7 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import TiltCard from './ui/TiltCard';
 import {
   FiGrid,
   FiUser,
@@ -63,21 +64,26 @@ const Sidebar = () => {
   return (
     <aside className="w-64 bg-slate-900 text-slate-300 min-h-[calc(100vh-4rem)] flex flex-col justify-between p-4 shrink-0 shadow-xl border-r border-slate-800 rounded-2xl">
       <div className="space-y-6">
-        {/* User Mini Card */}
-        <div className="flex items-center gap-3 p-3 bg-slate-800/80 rounded-xl border border-slate-700/60">
-          <img
-            src={user.profileImage || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80'}
-            alt={user.name}
-            className="w-10 h-10 rounded-full border-2 border-red-500 object-cover shrink-0"
-          />
-          <div className="flex flex-col min-w-0">
-            <span className="text-sm font-bold text-white truncate">{user.name}</span>
-            <span className="text-[11px] font-medium text-red-400 uppercase tracking-wider flex items-center gap-1">
-              <FiShield className="w-3 h-3" />
-              {user.role}
-            </span>
+        {/* User Mini Card with subtle 3D tilt and avatar glow */}
+        <TiltCard maxAngle={3} scaleOnHover={1.01} className="bg-slate-800/80 p-3 rounded-xl border border-slate-700/60 shadow-sm hover:border-red-500/40 transition-colors">
+          <div className="flex items-center gap-3">
+            <div className="relative group/avatar shrink-0">
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-red-600 to-rose-500 rounded-full blur-xs opacity-0 group-hover/avatar:opacity-100 transition-opacity duration-300"></div>
+              <img
+                src={user.profileImage || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80'}
+                alt={user.name}
+                className="relative w-10 h-10 rounded-full border-2 border-red-500 object-cover transform group-hover/avatar:scale-105 transition-transform duration-300 shadow-sm"
+              />
+            </div>
+            <div className="flex flex-col min-w-0">
+              <span className="text-sm font-bold text-white truncate">{user.name}</span>
+              <span className="text-[11px] font-medium text-red-400 uppercase tracking-wider flex items-center gap-1">
+                <FiShield className="w-3 h-3" />
+                {user.role}
+              </span>
+            </div>
           </div>
-        </div>
+        </TiltCard>
 
         {/* Navigation Section Header */}
         <div>
@@ -92,10 +98,10 @@ const Sidebar = () => {
                   key={link.path}
                   to={link.path}
                   className={({ isActive }) =>
-                    `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ${
+                    `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 transform hover:translate-x-1 ${
                       isActive
-                        ? 'bg-red-600 text-white font-semibold shadow-sm'
-                        : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                        ? 'bg-gradient-to-r from-red-600 to-brand-600 text-white font-semibold shadow-md shadow-red-900/30'
+                        : 'text-slate-300 hover:bg-slate-800/90 hover:text-white'
                     }`
                   }
                 >
@@ -112,7 +118,7 @@ const Sidebar = () => {
       <div className="pt-4 border-t border-slate-800">
         <button
           onClick={handleLogout}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-red-400 hover:bg-red-950/40 hover:text-red-300 transition-colors"
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-red-400 hover:bg-red-950/40 hover:text-red-300 transition-all duration-200 transform hover:translate-x-1"
         >
           <FiLogOut className="w-5 h-5" />
           <span>Logout</span>
