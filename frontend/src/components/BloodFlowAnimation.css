@@ -1,0 +1,56 @@
+/* BloodFlowAnimation.css */
+
+.blood-flow-viewport {
+  perspective: 1000px;
+  width: 100%;
+  position: relative;
+  border-radius: 24px;
+  transition: transform 0.25s ease-out, box-shadow 0.3s ease-out;
+  transform-style: preserve-3d;
+}
+
+.blood-flow-container {
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.95));
+  backdrop-filter: blur(16px);
+  border: 1.5px solid rgba(229, 37, 33, 0.3);
+  border-radius: 24px;
+  padding: 24px;
+  box-shadow: 0 12px 32px -8px rgba(0, 0, 0, 0.5), 0 0 20px rgba(229, 37, 33, 0.15) inset;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.blood-flow-viewport:hover .blood-flow-container {
+  border-color: rgba(239, 68, 68, 0.7);
+  box-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.6), 0 0 30px rgba(229, 37, 33, 0.35) inset;
+}
+
+/* Vessel glow & stroke styling */
+.vessel-track {
+  filter: drop-shadow(0 0 10px rgba(229, 37, 33, 0.7));
+  transition: filter 0.3s ease;
+}
+
+.blood-flow-viewport:hover .vessel-track {
+  filter: drop-shadow(0 0 18px rgba(239, 68, 68, 0.95));
+}
+
+.vessel-inner {
+  animation: dashMove 1.5s linear infinite;
+}
+
+@keyframes dashMove {
+  0% { stroke-dashoffset: 0; }
+  100% { stroke-dashoffset: -24; }
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .vessel-inner {
+    animation: none !important;
+  }
+  svg animateMotion {
+    dur: 0s !important;
+  }
+}
