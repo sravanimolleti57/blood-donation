@@ -46,6 +46,7 @@ app.use('/api/donors', require('./routes/donorRoutes'));
 app.use('/api/hospitals', require('./routes/hospitalRoutes'));
 app.use('/api/blood-requests', require('./routes/bloodRequestRoutes'));
 app.use('/api/donations', require('./routes/donationRoutes'));
+app.use('/api', require('./routes/donorResponseRoutes'));
 
 // Error handling middleware
 app.use(notFound);

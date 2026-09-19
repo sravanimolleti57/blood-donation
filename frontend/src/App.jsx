@@ -31,8 +31,14 @@ import HospitalRequests from './pages/hospital/HospitalRequests';
 import AdminLogin from './pages/admin/AdminLogin';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import Users from './pages/admin/Users';
+import Donors from './pages/admin/Donors';
+import DonorProfileView from './pages/admin/DonorProfileView';
 import Hospitals from './pages/admin/Hospitals';
+import HospitalProfileView from './pages/admin/HospitalProfileView';
 import Requests from './pages/admin/Requests';
+import AdminDonations from './pages/admin/AdminDonations';
+import AdminManagement from './pages/admin/AdminManagement';
+import DonorResponseReview from './pages/admin/DonorResponseReview';
 import Settings from './pages/admin/Settings';
 
 // Layout wrapper for Portal pages (with sidebar) vs Public pages
@@ -109,6 +115,14 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/donor/blood-requests/:requestId/respond"
+          element={
+            <ProtectedRoute allowedRoles={['donor']}>
+              <DonorRequests />
+            </ProtectedRoute>
+          }
+        />
 
         {/* Protected Hospital Routes */}
         <Route
@@ -162,6 +176,22 @@ function AppRoutes() {
           }
         />
         <Route
+          path="/admin/donors"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <Donors />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/donors/:id"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <DonorProfileView />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/admin/hospitals"
           element={
             <ProtectedRoute allowedRoles={['admin']}>
@@ -170,10 +200,58 @@ function AppRoutes() {
           }
         />
         <Route
+          path="/admin/hospitals/:id"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <HospitalProfileView />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/admin/requests"
           element={
             <ProtectedRoute allowedRoles={['admin']}>
               <Requests />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/blood-requests"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <Requests />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/donor-responses"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <Requests />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/donations"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <AdminDonations />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/management"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <AdminManagement />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/donor-responses/:id"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <DonorResponseReview />
             </ProtectedRoute>
           }
         />

@@ -157,11 +157,23 @@ const Login = () => {
             </Button>
           </form>
 
-          <div className="text-center border-t border-slate-100 pt-6 text-xs text-slate-600">
-            <span>Don't have an account? </span>
-            <Link to="/register" className="font-bold text-brand-600 hover:text-brand-700 underline">
-              Create Account
-            </Link>
+          <div className="text-center border-t border-slate-100 pt-6 text-xs text-slate-600 space-y-3">
+            <div>
+              <span>Don't have an account? </span>
+              <Link to="/register" className="font-bold text-brand-600 hover:text-brand-700 underline">
+                Create Account
+              </Link>
+            </div>
+            
+            <div className="pt-2 border-t border-slate-100">
+              <Link
+                to="/admin/login"
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-900 text-white font-semibold text-xs hover:bg-slate-800 transition-colors shadow-xs"
+              >
+                <span>🛡️</span>
+                <span>Admin Portal Login</span>
+              </Link>
+            </div>
           </div>
         </div>
 

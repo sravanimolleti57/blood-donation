@@ -1,5 +1,56 @@
 const mongoose = require('mongoose');
 
+const bloodResponseSchema = new mongoose.Schema(
+  {
+    donor: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+    },
+    respondedAt: {
+      type: Date,
+      default: Date.now,
+    },
+    status: {
+      type: String,
+      enum: ['pending', 'accepted', 'rejected'],
+      default: 'pending',
+    },
+    notes: {
+      type: String,
+      default: '',
+    },
+    verificationDetails: {
+      lastDonationDate: {
+        type: Date,
+      },
+      totalDonations: {
+        type: Number,
+        default: 0,
+      },
+      eligibleSixMonths: {
+        type: Boolean,
+        default: true,
+      },
+      daysSinceLastDonation: {
+        type: Number,
+        default: null,
+      },
+      bloodGroupMatch: {
+        type: Boolean,
+        default: true,
+      },
+      availabilityMatch: {
+        type: Boolean,
+        default: true,
+      },
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
 const bloodRequestSchema = new mongoose.Schema(
   {
     requester: {
@@ -61,6 +112,7 @@ const bloodRequestSchema = new mongoose.Schema(
       trim: true,
       default: '',
     },
+    responses: [bloodResponseSchema],
   },
   {
     timestamps: true,

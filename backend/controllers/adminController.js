@@ -1,24 +1,38 @@
 const User = require('../models/User');
 const BloodRequest = require('../models/BloodRequest');
 const Donation = require('../models/Donation');
+const DonorResponse = require('../models/DonorResponse');
 
 /**
  * @desc    Get Admin Dashboard Statistics
  * @route   GET /api/admin/dashboard/stats
  * @access  Private (Admin)
  */
-const getDashboardStats = async (req, res) => {
+const getAdminDashboardStats = async (req, res) => {
   try {
     const totalUsers = await User.countDocuments();
     const totalDonors = await User.countDocuments({ role: 'donor' });
     const totalHospitals = await User.countDocuments({ role: 'hospital' });
     const totalAdmins = await User.countDocuments({ role: 'admin' });
+
     const activeUsers = await User.countDocuments({ isActive: { $ne: false } });
     const inactiveUsers = await User.countDocuments({ isActive: false });
 
+    const activeDonors = await User.countDocuments({ role: 'donor', isActive: { $ne: false } });
+    const inactiveDonors = await User.countDocuments({ role: 'donor', isActive: false });
+
+    const activeHospitals = await User.countDocuments({ role: 'hospital', isActive: { $ne: false } });
+    const inactiveHospitals = await User.countDocuments({ role: 'hospital', isActive: false });
+
     const totalBloodRequests = await BloodRequest.countDocuments();
+    const activeBloodRequests = await BloodRequest.countDocuments({ status: { $in: ['pending', 'approved'] } });
     const pendingBloodRequests = await BloodRequest.countDocuments({ status: 'pending' });
-    const fulfilledBloodRequests = await BloodRequest.countDocuments({ status: 'fulfilled' });
+    const approvedBloodRequests = await BloodRequest.countDocuments({ status: 'approved' });
+    const fulfilledRequests = await BloodRequest.countDocuments({ status: 'fulfilled' });
+
+    const pendingDonorResponses = await DonorResponse.countDocuments({ status: 'pending' });
+    const acceptedResponses = await DonorResponse.countDocuments({ status: 'accepted' });
+    const rejectedResponses = await DonorResponse.countDocuments({ status: 'rejected' });
 
     const totalDonations = await Donation.countDocuments();
 
@@ -31,9 +45,19 @@ const getDashboardStats = async (req, res) => {
         totalAdmins,
         activeUsers,
         inactiveUsers,
+        activeDonors,
+        inactiveDonors,
+        activeHospitals,
+        inactiveHospitals,
         totalBloodRequests,
+        activeBloodRequests,
         pendingBloodRequests,
+        approvedBloodRequests,
         fulfilledBloodRequests,
+        fulfilledRequests,
+        pendingDonorResponses,
+        acceptedResponses,
+        rejectedResponses,
         totalDonations,
       },
     });
@@ -47,14 +71,13 @@ const getDashboardStats = async (req, res) => {
 };
 
 /**
- * @desc    Get all users with filtering/search
+ * @desc    Get all users (general view)
  * @route   GET /api/admin/users
  * @access  Private (Admin)
  */
 const getUsers = async (req, res) => {
   try {
     const { role, status, search } = req.query;
-
     let query = {};
 
     if (role && role !== 'all') {
@@ -94,6 +117,32 @@ const getUsers = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: 'Server error fetching user list.',
+    });
+  }
+};
+
+/**
+ * @desc    Get all admin accounts for Admin Management
+ * @route   GET /api/admin/management
+ * @access  Private (Admin)
+ */
+const getAdmins = async (req, res) => {
+  try {
+    const admins = await User.find({ role: 'admin' })
+      .select('-password')
+      .sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      success: true,
+      count: admins.length,
+      admins,
+      data: admins,
+    });
+  } catch (error) {
+    console.error('Error fetching admin accounts:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Server error fetching administrator list.',
     });
   }
 };
@@ -147,7 +196,6 @@ const updateUser = async (req, res) => {
     const {
       name,
       phone,
-      role,
       bloodGroup,
       city,
       address,
@@ -156,11 +204,12 @@ const updateUser = async (req, res) => {
       verified,
       contactPerson,
       hospitalLicenseNumber,
+      dateOfBirth,
+      gender,
     } = req.body;
 
     if (name !== undefined) user.name = name;
     if (phone !== undefined) user.phone = phone;
-    if (role !== undefined) user.role = role;
     if (bloodGroup !== undefined) user.bloodGroup = bloodGroup;
     if (city !== undefined) user.city = city;
     if (address !== undefined) user.address = address;
@@ -169,6 +218,8 @@ const updateUser = async (req, res) => {
     if (verified !== undefined) user.verified = verified;
     if (contactPerson !== undefined) user.contactPerson = contactPerson;
     if (hospitalLicenseNumber !== undefined) user.hospitalLicenseNumber = hospitalLicenseNumber;
+    if (dateOfBirth !== undefined) user.dateOfBirth = dateOfBirth;
+    if (gender !== undefined) user.gender = gender;
 
     const updatedUser = await user.save();
     const safeUser = await User.findById(updatedUser._id).select('-password');
@@ -213,7 +264,6 @@ const updateUserStatus = async (req, res) => {
       });
     }
 
-    // Protect against deactivating the last admin
     if (user.role === 'admin' && !isActive) {
       const adminCount = await User.countDocuments({ role: 'admin', isActive: true });
       if (adminCount <= 1) {
@@ -260,7 +310,6 @@ const deleteUser = async (req, res) => {
       });
     }
 
-    // Do not allow admin to delete self or last admin
     if (user._id.toString() === req.user._id.toString()) {
       return res.status(400).json({
         success: false,
@@ -293,24 +342,51 @@ const deleteUser = async (req, res) => {
   }
 };
 
-/**
- * @desc    Get all donors list
- * @route   GET /api/donors
- * @access  Private / Public
- */
-const getDonors = async (req, res) => {
-  try {
-    const { bloodGroup, city, available } = req.query;
-    let query = { role: 'donor', isActive: { $ne: false } };
+// ============================================================
+// DONOR MANAGEMENT CONTROLLERS
+// ============================================================
 
-    if (bloodGroup && bloodGroup !== 'all') {
+/**
+ * @desc    Get all donor accounts with filtering and search
+ * @route   GET /api/admin/donors
+ * @access  Private (Admin)
+ */
+const getAllDonors = async (req, res) => {
+  try {
+    const { bloodGroup, availability, available, status, city, search } = req.query;
+
+    let query = { role: 'donor' };
+
+    if (bloodGroup && bloodGroup !== 'all' && bloodGroup !== 'All') {
       query.bloodGroup = bloodGroup;
     }
-    if (city) {
+
+    const availVal = availability !== undefined ? availability : available;
+    if (availVal !== undefined && availVal !== 'all' && availVal !== 'All') {
+      query.available = availVal === 'true' || availVal === true || availVal === 'Available';
+    }
+
+    if (status && status !== 'all' && status !== 'All') {
+      if (status.toLowerCase() === 'active') {
+        query.isActive = { $ne: false };
+      } else if (status.toLowerCase() === 'inactive') {
+        query.isActive = false;
+      }
+    }
+
+    if (city && city !== 'all' && city !== 'All') {
       query.city = { $regex: city, $options: 'i' };
     }
-    if (available !== undefined && available !== 'all') {
-      query.available = available === 'true' || available === true;
+
+    if (search && search.trim() !== '') {
+      const searchRegex = new RegExp(search.trim(), 'i');
+      query.$or = [
+        { name: searchRegex },
+        { email: searchRegex },
+        { phone: searchRegex },
+        { city: searchRegex },
+        { bloodGroup: searchRegex },
+      ];
     }
 
     const donors = await User.find(query)
@@ -327,87 +403,533 @@ const getDonors = async (req, res) => {
     console.error('Error fetching donors:', error);
     return res.status(500).json({
       success: false,
-      message: 'Server error fetching donors list.',
+      message: 'Unable to load donor profiles. Please try again.',
     });
   }
 };
 
 /**
- * @desc    Get donor by ID
- * @route   GET /api/donors/:id
- * @access  Private
+ * @desc    Get single donor profile by ID with donation statistics
+ * @route   GET /api/admin/donors/:id
+ * @access  Private (Admin)
  */
 const getDonorById = async (req, res) => {
   try {
     const donor = await User.findOne({ _id: req.params.id, role: 'donor' }).select('-password');
+
     if (!donor) {
-      return res.status(404).json({ success: false, message: 'Donor profile not found.' });
+      return res.status(404).json({
+        success: false,
+        message: 'Donor profile not found.',
+      });
     }
-    return res.status(200).json({ success: true, donor, data: donor });
+
+    const donations = await Donation.find({ donor: donor._id }).sort({ donationDate: -1 });
+    const totalDonations = donations.length;
+    const lastDonationDate = donations.length > 0 ? donations[0].donationDate : null;
+
+    const donorObj = donor.toObject();
+    donorObj.totalDonations = totalDonations;
+    donorObj.lastDonationDate = lastDonationDate;
+
+    return res.status(200).json({
+      success: true,
+      donor: donorObj,
+      data: donorObj,
+    });
   } catch (error) {
-    return res.status(500).json({ success: false, message: 'Server error fetching donor.' });
+    console.error('Error fetching donor by ID:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Server error retrieving donor profile details.',
+    });
   }
 };
 
 /**
- * @desc    Get all hospitals list
- * @route   GET /api/hospitals
- * @access  Private / Public
+ * @desc    Update donor profile information
+ * @route   PUT /api/admin/donors/:id
+ * @access  Private (Admin)
  */
-const getHospitals = async (req, res) => {
+const updateDonor = async (req, res) => {
   try {
-    const { city } = req.query;
-    let query = { role: 'hospital', isActive: { $ne: false } };
+    const donor = await User.findOne({ _id: req.params.id, role: 'donor' });
 
-    if (city) {
-      query.city = { $regex: city, $options: 'i' };
+    if (!donor) {
+      return res.status(404).json({
+        success: false,
+        message: 'Donor account not found.',
+      });
     }
 
-    const hospitals = await User.find(query)
-      .select('-password')
+    const {
+      name,
+      phone,
+      gender,
+      dateOfBirth,
+      bloodGroup,
+      city,
+      address,
+      available,
+      availability,
+    } = req.body;
+
+    if (name !== undefined) donor.name = name;
+    if (phone !== undefined) donor.phone = phone;
+    if (gender !== undefined) donor.gender = gender;
+    if (dateOfBirth !== undefined) donor.dateOfBirth = dateOfBirth;
+    if (bloodGroup !== undefined) donor.bloodGroup = bloodGroup;
+    if (city !== undefined) donor.city = city;
+    if (address !== undefined) donor.address = address;
+
+    const availVal = availability !== undefined ? availability : available;
+    if (availVal !== undefined) donor.available = Boolean(availVal);
+
+    donor.role = 'donor';
+
+    await donor.save();
+
+    const updatedDonor = await User.findById(donor._id).select('-password');
+    const donations = await Donation.find({ donor: donor._id }).sort({ donationDate: -1 });
+    
+    const donorObj = updatedDonor.toObject();
+    donorObj.totalDonations = donations.length;
+    donorObj.lastDonationDate = donations.length > 0 ? donations[0].donationDate : null;
+
+    return res.status(200).json({
+      success: true,
+      message: 'Donor profile updated successfully.',
+      donor: donorObj,
+      data: donorObj,
+    });
+  } catch (error) {
+    console.error('Error updating donor:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Server error updating donor profile.',
+    });
+  }
+};
+
+/**
+ * @desc    Activate or deactivate donor account
+ * @route   PATCH /api/admin/donors/:id/status
+ * @access  Private (Admin)
+ */
+const updateDonorStatus = async (req, res) => {
+  try {
+    const { isActive } = req.body;
+
+    if (isActive === undefined) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide isActive boolean status.',
+      });
+    }
+
+    const donor = await User.findOne({ _id: req.params.id, role: 'donor' });
+
+    if (!donor) {
+      return res.status(404).json({
+        success: false,
+        message: 'Donor account not found.',
+      });
+    }
+
+    donor.isActive = Boolean(isActive);
+    await donor.save();
+
+    const safeDonor = await User.findById(donor._id).select('-password');
+
+    return res.status(200).json({
+      success: true,
+      message: `Donor account ${donor.isActive ? 'activated' : 'deactivated'} successfully.`,
+      donor: safeDonor,
+      data: safeDonor,
+    });
+  } catch (error) {
+    console.error('Error updating donor status:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Server error changing donor status.',
+    });
+  }
+};
+
+/**
+ * @desc    Delete donor account safely
+ * @route   DELETE /api/admin/donors/:id
+ * @access  Private (Admin)
+ */
+const deleteDonor = async (req, res) => {
+  try {
+    const donor = await User.findOne({ _id: req.params.id, role: 'donor' });
+
+    if (!donor) {
+      return res.status(404).json({
+        success: false,
+        message: 'Donor profile not found.',
+      });
+    }
+
+    await Donation.deleteMany({ donor: donor._id });
+    await User.findByIdAndDelete(donor._id);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Donor profile deleted successfully.',
+    });
+  } catch (error) {
+    console.error('Error deleting donor:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Server error deleting donor account.',
+    });
+  }
+};
+
+/**
+ * @desc    Get donor donation history by ID
+ * @route   GET /api/admin/donors/:id/history
+ * @access  Private (Admin)
+ */
+const getDonorDonationHistory = async (req, res) => {
+  try {
+    const donations = await Donation.find({ donor: req.params.id })
+      .populate('bloodRequest')
+      .populate('hospital', 'name email phone city')
       .sort({ createdAt: -1 });
 
     return res.status(200).json({
       success: true,
-      count: hospitals.length,
-      hospitals,
-      data: hospitals,
+      count: donations.length,
+      donations,
+      data: donations,
+    });
+  } catch (error) {
+    console.error('Error fetching donor donation history:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Server error retrieving donor donation history.',
+    });
+  }
+};
+
+// ============================================================
+// HOSPITAL MANAGEMENT CONTROLLERS
+// ============================================================
+
+/**
+ * @desc    Get all hospital accounts with statistics, search, and filtering
+ * @route   GET /api/admin/hospitals
+ * @access  Private (Admin)
+ */
+const getAllHospitals = async (req, res) => {
+  try {
+    const { search, city, status, sort } = req.query;
+
+    let query = { role: 'hospital' };
+
+    if (status && status !== 'all' && status !== 'All') {
+      if (status.toLowerCase() === 'active') {
+        query.isActive = { $ne: false };
+      } else if (status.toLowerCase() === 'inactive') {
+        query.isActive = false;
+      }
+    }
+
+    if (city && city !== 'all' && city !== 'All') {
+      query.city = { $regex: city, $options: 'i' };
+    }
+
+    if (search && search.trim() !== '') {
+      const searchRegex = new RegExp(search.trim(), 'i');
+      query.$or = [
+        { name: searchRegex },
+        { email: searchRegex },
+        { phone: searchRegex },
+        { city: searchRegex },
+      ];
+    }
+
+    let sortOptions = { createdAt: -1 };
+    if (sort === 'oldest') {
+      sortOptions = { createdAt: 1 };
+    } else if (sort === 'name_asc' || sort === 'Name A-Z') {
+      sortOptions = { name: 1 };
+    } else if (sort === 'name_desc' || sort === 'Name Z-A') {
+      sortOptions = { name: -1 };
+    }
+
+    const hospitals = await User.find(query)
+      .select('-password')
+      .sort(sortOptions);
+
+    const hospitalList = await Promise.all(
+      hospitals.map(async (h) => {
+        const hObj = h.toObject();
+        const totalBloodRequests = await BloodRequest.countDocuments({ requester: h._id });
+        const pendingRequests = await BloodRequest.countDocuments({ requester: h._id, status: 'pending' });
+        const fulfilledRequests = await BloodRequest.countDocuments({ requester: h._id, status: 'fulfilled' });
+        
+        hObj.totalBloodRequests = totalBloodRequests;
+        hObj.pendingRequests = pendingRequests;
+        hObj.fulfilledRequests = fulfilledRequests;
+
+        return hObj;
+      })
+    );
+
+    return res.status(200).json({
+      success: true,
+      count: hospitalList.length,
+      hospitals: hospitalList,
+      data: hospitalList,
     });
   } catch (error) {
     console.error('Error fetching hospitals:', error);
     return res.status(500).json({
       success: false,
-      message: 'Server error fetching hospitals list.',
+      message: 'Unable to load hospital profiles. Please try again.',
     });
   }
 };
 
 /**
- * @desc    Get hospital by ID
- * @route   GET /api/hospitals/:id
- * @access  Private
+ * @desc    Get hospital profile by ID with full blood request metrics
+ * @route   GET /api/admin/hospitals/:id
+ * @access  Private (Admin)
  */
 const getHospitalById = async (req, res) => {
   try {
     const hospital = await User.findOne({ _id: req.params.id, role: 'hospital' }).select('-password');
+
     if (!hospital) {
-      return res.status(404).json({ success: false, message: 'Hospital account not found.' });
+      return res.status(404).json({
+        success: false,
+        message: 'Hospital account not found.',
+      });
     }
-    return res.status(200).json({ success: true, hospital, data: hospital });
+
+    const totalBloodRequests = await BloodRequest.countDocuments({ requester: hospital._id });
+    const pendingRequests = await BloodRequest.countDocuments({ requester: hospital._id, status: 'pending' });
+    const approvedRequests = await BloodRequest.countDocuments({ requester: hospital._id, status: 'approved' });
+    const fulfilledRequests = await BloodRequest.countDocuments({ requester: hospital._id, status: 'fulfilled' });
+    const cancelledRequests = await BloodRequest.countDocuments({ requester: hospital._id, status: 'cancelled' });
+
+    const hospitalObj = hospital.toObject();
+    hospitalObj.totalBloodRequests = totalBloodRequests;
+    hospitalObj.pendingRequests = pendingRequests;
+    hospitalObj.approvedRequests = approvedRequests;
+    hospitalObj.fulfilledRequests = fulfilledRequests;
+    hospitalObj.cancelledRequests = cancelledRequests;
+
+    return res.status(200).json({
+      success: true,
+      hospital: hospitalObj,
+      data: hospitalObj,
+    });
   } catch (error) {
-    return res.status(500).json({ success: false, message: 'Server error fetching hospital.' });
+    console.error('Error fetching hospital by ID:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Server error retrieving hospital profile details.',
+    });
+  }
+};
+
+/**
+ * @desc    Update hospital profile information
+ * @route   PUT /api/admin/hospitals/:id
+ * @access  Private (Admin)
+ */
+const updateHospital = async (req, res) => {
+  try {
+    const hospital = await User.findOne({ _id: req.params.id, role: 'hospital' });
+
+    if (!hospital) {
+      return res.status(404).json({
+        success: false,
+        message: 'Hospital account not found.',
+      });
+    }
+
+    const {
+      name,
+      phone,
+      city,
+      address,
+      hospitalLicenseNumber,
+      contactPerson,
+    } = req.body;
+
+    if (name !== undefined) hospital.name = name;
+    if (phone !== undefined) hospital.phone = phone;
+    if (city !== undefined) hospital.city = city;
+    if (address !== undefined) hospital.address = address;
+    if (hospitalLicenseNumber !== undefined) hospital.hospitalLicenseNumber = hospitalLicenseNumber;
+    if (contactPerson !== undefined) hospital.contactPerson = contactPerson;
+
+    hospital.role = 'hospital';
+
+    await hospital.save();
+
+    const updatedHospital = await User.findById(hospital._id).select('-password');
+    const hospitalObj = updatedHospital.toObject();
+
+    hospitalObj.totalBloodRequests = await BloodRequest.countDocuments({ requester: hospital._id });
+    hospitalObj.pendingRequests = await BloodRequest.countDocuments({ requester: hospital._id, status: 'pending' });
+    hospitalObj.fulfilledRequests = await BloodRequest.countDocuments({ requester: hospital._id, status: 'fulfilled' });
+
+    return res.status(200).json({
+      success: true,
+      message: 'Hospital profile updated successfully.',
+      hospital: hospitalObj,
+      data: hospitalObj,
+    });
+  } catch (error) {
+    console.error('Error updating hospital:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Server error updating hospital account.',
+    });
+  }
+};
+
+/**
+ * @desc    Activate or deactivate hospital account
+ * @route   PATCH /api/admin/hospitals/:id/status
+ * @access  Private (Admin)
+ */
+const updateHospitalStatus = async (req, res) => {
+  try {
+    const { isActive } = req.body;
+
+    if (isActive === undefined) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide isActive boolean status.',
+      });
+    }
+
+    const hospital = await User.findOne({ _id: req.params.id, role: 'hospital' });
+
+    if (!hospital) {
+      return res.status(404).json({
+        success: false,
+        message: 'Hospital account not found.',
+      });
+    }
+
+    hospital.isActive = Boolean(isActive);
+    await hospital.save();
+
+    const safeHospital = await User.findById(hospital._id).select('-password');
+
+    return res.status(200).json({
+      success: true,
+      message: `Hospital account ${hospital.isActive ? 'activated' : 'deactivated'} successfully.`,
+      hospital: safeHospital,
+      data: safeHospital,
+    });
+  } catch (error) {
+    console.error('Error updating hospital status:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Server error changing hospital status.',
+    });
+  }
+};
+
+/**
+ * @desc    Delete hospital account safely
+ * @route   DELETE /api/admin/hospitals/:id
+ * @access  Private (Admin)
+ */
+const deleteHospital = async (req, res) => {
+  try {
+    const hospital = await User.findOne({ _id: req.params.id, role: 'hospital' });
+
+    if (!hospital) {
+      return res.status(404).json({
+        success: false,
+        message: 'Hospital account not found.',
+      });
+    }
+
+    await BloodRequest.deleteMany({ requester: hospital._id });
+    await Donation.deleteMany({ hospital: hospital._id });
+
+    await User.findByIdAndDelete(hospital._id);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Hospital profile deleted successfully.',
+    });
+  } catch (error) {
+    console.error('Error deleting hospital:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Server error deleting hospital account.',
+    });
+  }
+};
+
+/**
+ * @desc    Get all donations for admin view
+ * @route   GET /api/admin/donations
+ * @access  Private (Admin)
+ */
+const getAllDonations = async (req, res) => {
+  try {
+    const donations = await Donation.find({})
+      .populate('donor', 'name email phone bloodGroup city')
+      .populate('bloodRequest')
+      .populate('hospital', 'name email phone city')
+      .sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      success: true,
+      count: donations.length,
+      donations,
+      data: donations,
+    });
+  } catch (error) {
+    console.error('Error fetching all donations:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Server error retrieving donation records.',
+    });
   }
 };
 
 module.exports = {
-  getDashboardStats,
+  getAdminDashboardStats,
+  getDashboardStats: getAdminDashboardStats,
   getUsers,
+  getAdmins,
   getUserById,
   updateUser,
   updateUserStatus,
   deleteUser,
-  getDonors,
+  
+  // Donors
+  getAllDonors,
+  getDonors: getAllDonors,
   getDonorById,
-  getHospitals,
+  getDonorDonationHistory,
+  updateDonor,
+  updateDonorStatus,
+  deleteDonor,
+  
+  // Hospitals
+  getAllHospitals,
+  getHospitals: getAllHospitals,
   getHospitalById,
+  updateHospital,
+  updateHospitalStatus,
+  deleteHospital,
+
+  // Donations
+  getAllDonations,
 };
