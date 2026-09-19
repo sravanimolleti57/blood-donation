@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import API from '../../services/api';
-import BloodGroupBadge from '../../components/BloodGroupBadge';
 import {
   FiUsers,
   FiActivity,
@@ -9,68 +8,84 @@ import {
   FiShield,
   FiTrendingUp,
   FiAlertCircle,
+  FiClock,
+  FiCheckSquare,
 } from 'react-icons/fi';
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState({
-    totalUsers: 1240,
-    totalDonors: 1050,
-    totalHospitals: 190,
-    activeRequests: 42,
+    totalUsers: 0,
+    totalDonors: 0,
+    totalHospitals: 0,
+    totalAdmins: 0,
+    activeUsers: 0,
+    inactiveUsers: 0,
+    totalBloodRequests: 0,
+    pendingBloodRequests: 0,
+    fulfilledBloodRequests: 0,
+    totalDonations: 0,
   });
+  const [recentUsers, setRecentUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchAdminStats = async () => {
+    const fetchAdminDashboard = async () => {
+      setLoading(true);
       try {
-        const usersRes = await API.get('/users');
-        const hospitalsRes = await API.get('/users/hospitals');
+        const [statsRes, usersRes] = await Promise.all([
+          API.get('/admin/dashboard/stats'),
+          API.get('/admin/users'),
+        ]);
+
+        if (statsRes.data.success) {
+          setStats(statsRes.data.data);
+        }
+
         if (usersRes.data.success) {
-          const allUsers = usersRes.data.users;
-          const donors = allUsers.filter((u) => u.role === 'donor');
-          setStats({
-            totalUsers: allUsers.length,
-            totalDonors: donors.length,
-            totalHospitals: hospitalsRes.data.count || 0,
-            activeRequests: 12,
-          });
+          const userList = usersRes.data.users || usersRes.data.data || [];
+          setRecentUsers(userList.slice(0, 5));
         }
       } catch (err) {
-        console.log('Using admin dashboard fallback counters');
+        console.error('Error loading admin dashboard stats:', err);
+        setError('Failed to fetch dashboard metrics from MongoDB Atlas.');
+      } finally {
+        setLoading(false);
       }
     };
-    fetchAdminStats();
-  }, []);
 
-  const recentUsers = [
-    { name: 'Ananya Roy', email: 'ananya@example.com', role: 'donor', date: 'Today', status: 'Active' },
-    { name: 'City Hospital Hub', email: 'contact@cityhosp.org', role: 'hospital', date: 'Yesterday', status: 'Pending' },
-    { name: 'Rahul Sharma', email: 'rahul@example.com', role: 'donor', date: '16 Sep', status: 'Active' },
-  ];
+    fetchAdminDashboard();
+  }, []);
 
   return (
     <div className="space-y-8">
-      
       {/* Top Banner Greeting */}
       <div className="bg-slate-900 text-white p-6 sm:p-8 rounded-3xl shadow-xl flex items-center justify-between">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <h1 className="text-2xl sm:text-3xl font-extrabold">System Administration Panel</h1>
-            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-brand-600 text-white uppercase tracking-wider">
-              ADMIN CONTROL
+            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-red-600 text-white uppercase tracking-wider">
+              LIVE MONGODB METRICS
             </span>
           </div>
           <p className="text-xs text-slate-400">
-            Real-time monitoring of registered donors, hospital verification, and network health.
+            Real-time management of registered donors, hospital accounts, and emergency blood request pipeline.
           </p>
         </div>
-        <div className="w-12 h-12 rounded-2xl bg-slate-800 text-brand-400 flex items-center justify-center text-2xl border border-slate-700">
+        <div className="w-12 h-12 rounded-2xl bg-slate-800 text-red-400 flex items-center justify-center text-2xl border border-slate-700">
           🛡️
         </div>
       </div>
 
-      {/* Platform Overview Statistics */}
+      {error && (
+        <div className="p-4 bg-red-50 border border-red-200 rounded-2xl text-red-700 text-sm flex items-center gap-3">
+          <FiAlertCircle className="w-5 h-5 shrink-0" />
+          <span>{error}</span>
+        </div>
+      )}
+
+      {/* Primary Metrics Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        
         <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Users</span>
@@ -78,85 +93,133 @@ const AdminDashboard = () => {
               <FiUsers className="w-5 h-5" />
             </div>
           </div>
-          <div className="text-3xl font-black text-slate-900">{stats.totalUsers}</div>
-          <p className="text-[11px] text-emerald-600 font-medium">+14% growth this month</p>
+          <div className="text-3xl font-black text-slate-900">
+            {loading ? '...' : stats.totalUsers}
+          </div>
+          <p className="text-[11px] text-slate-500">
+            {stats.activeUsers} Active • {stats.inactiveUsers} Deactivated
+          </p>
         </div>
 
         <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Donors</span>
-            <div className="w-9 h-9 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center">
+            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Registered Donors</span>
+            <div className="w-9 h-9 rounded-xl bg-red-50 text-red-600 flex items-center justify-center">
               <FiDroplet className="w-5 h-5" />
             </div>
           </div>
-          <div className="text-3xl font-black text-slate-900">{stats.totalDonors}</div>
-          <p className="text-[11px] text-slate-400">Registered donor base</p>
+          <div className="text-3xl font-black text-slate-900">
+            {loading ? '...' : stats.totalDonors}
+          </div>
+          <p className="text-[11px] text-slate-500">Available blood donors</p>
         </div>
 
         <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Registered Hospitals</span>
+            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Hospitals / Banks</span>
             <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
               <FiActivity className="w-5 h-5" />
             </div>
           </div>
-          <div className="text-3xl font-black text-slate-900">{stats.totalHospitals}</div>
-          <p className="text-[11px] text-slate-400">Partner medical facilities</p>
+          <div className="text-3xl font-black text-slate-900">
+            {loading ? '...' : stats.totalHospitals}
+          </div>
+          <p className="text-[11px] text-slate-500">Partner medical accounts</p>
         </div>
 
         <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Active Requests</span>
-            <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
-              <FiTrendingUp className="w-5 h-5" />
+            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Blood Requests</span>
+            <div className="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+              <FiClock className="w-5 h-5" />
             </div>
           </div>
-          <div className="text-3xl font-black text-slate-900">{stats.activeRequests}</div>
-          <p className="text-[11px] text-brand-600 font-medium">Live emergency needs</p>
+          <div className="text-3xl font-black text-slate-900">
+            {loading ? '...' : stats.totalBloodRequests}
+          </div>
+          <p className="text-[11px] text-amber-600 font-medium">
+            {stats.pendingBloodRequests} Pending Approval
+          </p>
         </div>
-
       </div>
 
-      {/* Chart Placeholder & Activity Section */}
+      {/* Secondary Metrics & Activity Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
-        {/* Analytics Visual Placeholder */}
-        <div className="lg:col-span-2 bg-white p-6 rounded-3xl border border-slate-200 shadow-xs space-y-4">
-          <div className="flex items-center justify-between border-b pb-3">
+        {/* Additional Stats Breakdown */}
+        <div className="lg:col-span-2 bg-white p-6 rounded-3xl border border-slate-200 shadow-xs space-y-6">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-4">
             <div>
-              <h2 className="text-base font-bold text-slate-900">Donation & Registration Analytics</h2>
-              <p className="text-xs text-slate-500">Monthly platform volume trends</p>
+              <h2 className="text-base font-bold text-slate-900">Platform Operational Breakdown</h2>
+              <p className="text-xs text-slate-500">Database statistics direct from MongoDB Atlas</p>
             </div>
-            <span className="text-xs text-brand-600 font-semibold bg-brand-50 px-2.5 py-1 rounded-full">
-              2026 Metrics
+            <span className="text-xs text-emerald-600 font-semibold bg-emerald-50 px-2.5 py-1 rounded-full">
+              Live Connection
             </span>
           </div>
 
-          <div className="h-48 bg-slate-50 rounded-2xl border border-dashed border-slate-300 flex items-center justify-center flex-col gap-2">
-            <FiTrendingUp className="w-8 h-8 text-slate-400 animate-bounce" />
-            <span className="text-xs font-bold text-slate-600">Platform Activity Chart Placeholder</span>
-            <span className="text-[11px] text-slate-400">Monthly donor registrations & requests matched</span>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+            <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-1">
+              <span className="text-xs text-slate-500 font-medium">Fulfilled Requests</span>
+              <div className="text-2xl font-bold text-emerald-600">{stats.fulfilledBloodRequests}</div>
+            </div>
+            <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-1">
+              <span className="text-xs text-slate-500 font-medium">Completed Donations</span>
+              <div className="text-2xl font-bold text-blue-600">{stats.totalDonations}</div>
+            </div>
+            <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-1">
+              <span className="text-xs text-slate-500 font-medium">System Administrators</span>
+              <div className="text-2xl font-bold text-purple-600">{stats.totalAdmins}</div>
+            </div>
+          </div>
+
+          <div className="p-5 bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl text-white space-y-2">
+            <h3 className="text-sm font-bold flex items-center gap-2">
+              <FiShield className="text-red-400" />
+              Role-Based Access Control Summary
+            </h3>
+            <p className="text-xs text-slate-300 leading-relaxed">
+              Administrators have full operational control to review user accounts, approve emergency blood requests, verify hospital licenses, and manage donor availability status across the system.
+            </p>
           </div>
         </div>
 
-        {/* Quick Audit Logs */}
+        {/* Recent Registrations Table/List */}
         <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xs space-y-4">
-          <h2 className="text-base font-bold text-slate-900 border-b pb-3">Recent Registrations</h2>
-          <div className="space-y-3">
-            {recentUsers.map((u, i) => (
-              <div key={i} className="flex items-center justify-between p-3 bg-slate-50 rounded-2xl">
-                <div>
-                  <h4 className="text-xs font-bold text-slate-900">{u.name}</h4>
-                  <p className="text-[10px] text-slate-400">{u.email}</p>
+          <h2 className="text-base font-bold text-slate-900 border-b border-slate-100 pb-4">Recent Registrations</h2>
+          
+          {loading ? (
+            <div className="p-8 text-center text-slate-400 text-xs">Loading user list...</div>
+          ) : recentUsers.length === 0 ? (
+            <div className="p-8 text-center text-slate-500 text-xs">No registered users found.</div>
+          ) : (
+            <div className="space-y-3">
+              {recentUsers.map((u) => (
+                <div key={u._id || u.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-2xl border border-slate-100">
+                  <div className="min-w-0 flex-1 pr-2">
+                    <h4 className="text-xs font-bold text-slate-900 truncate">{u.name}</h4>
+                    <p className="text-[10px] text-slate-500 truncate">{u.email}</p>
+                  </div>
+                  <div className="flex flex-col items-end gap-1">
+                    <span
+                      className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                        u.role === 'admin'
+                          ? 'bg-purple-100 text-purple-700'
+                          : u.role === 'hospital'
+                          ? 'bg-blue-100 text-blue-700'
+                          : 'bg-red-100 text-red-700'
+                      }`}
+                    >
+                      {u.role.toUpperCase()}
+                    </span>
+                    <span className="text-[9px] text-slate-400">
+                      {u.createdAt ? new Date(u.createdAt).toLocaleDateString() : ''}
+                    </span>
+                  </div>
                 </div>
-                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${u.status === 'Active' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>
-                  {u.role.toUpperCase()}
-                </span>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
-
       </div>
     </div>
   );

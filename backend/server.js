@@ -16,11 +16,9 @@ const allowedOrigins = process.env.CLIENT_URL
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (mobile apps, Postman) or matching origins
       if (!origin || allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
         callback(null, true);
       } else {
-        // Fallback allow for deployed frontend to prevent CORS block
         callback(null, true);
       }
     },
@@ -43,6 +41,11 @@ app.get('/', (req, res) => {
 // Register API Routes
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/users', require('./routes/userRoutes'));
+app.use('/api/admin', require('./routes/adminRoutes'));
+app.use('/api/donors', require('./routes/donorRoutes'));
+app.use('/api/hospitals', require('./routes/hospitalRoutes'));
+app.use('/api/blood-requests', require('./routes/bloodRequestRoutes'));
+app.use('/api/donations', require('./routes/donationRoutes'));
 
 // Error handling middleware
 app.use(notFound);

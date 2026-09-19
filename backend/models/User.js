@@ -64,6 +64,13 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
+    lastLoginAt: {
+      type: Date,
+    },
     verified: {
       type: Boolean,
       default: function() {
@@ -81,8 +88,17 @@ const userSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
   }
 );
+
+// Virtual for availability alias
+userSchema.virtual('availability').get(function() {
+  return this.available;
+}).set(function(v) {
+  this.available = v;
+});
 
 // Encrypt password using bcrypt before saving
 userSchema.pre('save', async function (next) {

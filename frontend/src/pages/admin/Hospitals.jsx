@@ -14,16 +14,19 @@ const Hospitals = () => {
   }, []);
 
   const fetchHospitals = async () => {
+    setLoading(true);
     try {
-      const { data } = await API.get('/users/hospitals');
+      const { data } = await API.get('/hospitals');
       if (data.success) {
-        setHospitals(data.hospitals);
+        setHospitals(data.hospitals || data.data || []);
       }
     } catch (error) {
-      setHospitals([
-        { _id: '1', name: 'St. Jude Hospital', contactPerson: 'Dr. Rajesh Sharma', email: 'contact@stjude.org', city: 'Mumbai', hospitalLicenseNumber: 'REG-HOSP-8890', verified: false },
-        { _id: '2', name: 'City Central Blood Bank', contactPerson: 'Dr. Priya V.', email: 'admin@cityblood.org', city: 'Mumbai', hospitalLicenseNumber: 'REG-HOSP-1200', verified: true },
-      ]);
+      console.error('Error fetching hospitals:', error);
+      setToast({
+        type: 'error',
+        message: error.response?.data?.message || 'Failed to load hospital accounts.',
+      });
+      setHospitals([]);
     } finally {
       setLoading(false);
     }
@@ -31,12 +34,12 @@ const Hospitals = () => {
 
   const handleVerify = async (id, status) => {
     try {
-      const { data } = await API.put(`/users/verify-hospital/${id}`, { status });
+      const { data } = await API.put(`/admin/users/${id}`, { verified: status });
       if (data.success) {
         setHospitals(hospitals.map((h) => (h._id === id ? { ...h, verified: status } : h)));
         setToast({
           type: 'success',
-          message: `Hospital verification state updated to ${status ? 'VERIFIED' : 'REJECTED/PENDING'}`,
+          message: `Hospital verification state updated to ${status ? 'VERIFIED' : 'PENDING/UNVERIFIED'}`,
         });
       }
     } catch (error) {
@@ -75,7 +78,13 @@ const Hospitals = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
-              {hospitals.length === 0 ? (
+              {loading ? (
+                <tr>
+                  <td colSpan="6" className="p-8 text-center text-xs text-slate-400">
+                    Loading hospital accounts...
+                  </td>
+                </tr>
+              ) : hospitals.length === 0 ? (
                 <tr>
                   <td colSpan="6" className="p-8 text-center text-xs text-slate-400">
                     No hospital accounts found.
@@ -90,7 +99,7 @@ const Hospitals = () => {
                       <div className="text-slate-900">{h.email}</div>
                       <div className="text-slate-400">{h.city}</div>
                     </td>
-                    <td className="p-4 font-mono text-xs">{h.hospitalLicenseNumber || 'REG-HOSP-2026'}</td>
+                    <td className="p-4 font-mono text-xs">{h.hospitalLicenseNumber || 'N/A'}</td>
                     <td className="p-4">
                       <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${h.verified ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-amber-50 text-amber-700 border border-amber-200'}`}>
                         {h.verified ? '✓ VERIFIED' : '⏳ PENDING'}

@@ -28,6 +28,7 @@ import CreateRequest from './pages/hospital/CreateRequest';
 import HospitalRequests from './pages/hospital/HospitalRequests';
 
 // Admin Pages
+import AdminLogin from './pages/admin/AdminLogin';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import Users from './pages/admin/Users';
 import Hospitals from './pages/admin/Hospitals';
@@ -71,6 +72,7 @@ function AppRoutes() {
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
 

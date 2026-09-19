@@ -137,6 +137,27 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Admin Login function
+  const adminLogin = async (email, password) => {
+    setLoading(true);
+    try {
+      const { data } = await API.post('/auth/admin/login', { email, password });
+      if (data.success) {
+        setToken(data.token);
+        setUser(data.user);
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        return { success: true, message: data.message, role: data.user.role };
+      }
+      return { success: false, message: data.message || 'Admin login failed' };
+    } catch (error) {
+      const message = extractErrorMessage(error, 'Invalid admin credentials');
+      return { success: false, message };
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -145,6 +166,7 @@ export const AuthProvider = ({ children }) => {
         isAuthenticated,
         loading,
         login,
+        adminLogin,
         register,
         logout,
         updateUser,

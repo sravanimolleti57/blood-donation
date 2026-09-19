@@ -16,15 +16,23 @@ const protect = async (req, res, next) => {
         process.env.JWT_SECRET || 'fallback_secret_key_change_me'
       );
 
-      req.user = await User.findById(decoded.userId).select('-password');
+      const user = await User.findById(decoded.userId).select('-password');
 
-      if (!req.user) {
+      if (!user) {
         return res.status(401).json({
           success: false,
           message: 'User no longer exists or authorization failed.',
         });
       }
 
+      if (user.isActive === false) {
+        return res.status(403).json({
+          success: false,
+          message: 'Your account has been deactivated. Please contact the administrator.',
+        });
+      }
+
+      req.user = user;
       return next();
     } catch (error) {
       console.error('JWT Verification Error:', error.message);
@@ -49,4 +57,14 @@ const protect = async (req, res, next) => {
   }
 };
 
-module.exports = { protect };
+const adminMiddleware = (req, res, next) => {
+  if (req.user && req.user.role === 'admin') {
+    return next();
+  }
+  return res.status(403).json({
+    success: false,
+    message: 'Access denied: Admin privileges required.',
+  });
+};
+
+module.exports = { protect, adminMiddleware };

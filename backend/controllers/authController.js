@@ -79,7 +79,7 @@ const register = async (req, res) => {
     // Check duplicate email
     const userExists = await User.findOne({ email: email.toLowerCase() });
     if (userExists) {
-      return res.status(400).json({
+      return res.status(409).json({
         success: false,
         message: 'An account with this email address already exists.',
       });
@@ -100,7 +100,9 @@ const register = async (req, res) => {
       hospitalLicenseNumber: role === 'hospital' ? hospitalLicenseNumber : '',
       contactPerson: role === 'hospital' ? contactPerson : '',
       available: true,
+      isActive: true,
       verified: role !== 'hospital', // Hospitals require admin verification
+      lastLoginAt: new Date(),
     });
 
     if (user) {
@@ -122,8 +124,11 @@ const register = async (req, res) => {
           city: user.city,
           address: user.address,
           available: user.available,
+          availability: user.available,
+          isActive: user.isActive,
           verified: user.verified,
           profileImage: user.profileImage,
+          createdAt: user.createdAt,
         },
       });
     } else {
@@ -138,7 +143,7 @@ const register = async (req, res) => {
     // Handle Mongo Duplicate Key Error (E11000)
     if (error.code === 11000) {
       const field = Object.keys(error.keyValue || {})[0] || 'email';
-      return res.status(400).json({
+      return res.status(409).json({
         success: false,
         message: `An account with this ${field} already exists.`,
       });
@@ -186,6 +191,14 @@ const login = async (req, res) => {
       });
     }
 
+    // Check account status
+    if (user.isActive === false) {
+      return res.status(403).json({
+        success: false,
+        message: 'Your account has been deactivated. Please contact the administrator.',
+      });
+    }
+
     // Match password
     const isMatch = await user.matchPassword(password);
     if (!isMatch) {
@@ -194,6 +207,10 @@ const login = async (req, res) => {
         message: 'Invalid email or password.',
       });
     }
+
+    // Update last login timestamp
+    user.lastLoginAt = new Date();
+    await user.save({ validateBeforeSave: false });
 
     const token = generateToken(user._id, user.role);
 
@@ -213,10 +230,14 @@ const login = async (req, res) => {
         city: user.city,
         address: user.address,
         available: user.available,
+        availability: user.available,
+        isActive: user.isActive,
         verified: user.verified,
         profileImage: user.profileImage,
         contactPerson: user.contactPerson,
         hospitalLicenseNumber: user.hospitalLicenseNumber,
+        lastLoginAt: user.lastLoginAt,
+        createdAt: user.createdAt,
       },
     });
   } catch (error) {
@@ -224,6 +245,76 @@ const login = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: error.message || 'Server error during login.',
+    });
+  }
+};
+
+/**
+ * @desc    Authenticate admin & get token
+ * @route   POST /api/auth/admin/login
+ * @access  Public (Admin only credential check)
+ */
+const adminLogin = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide both admin email and password.',
+      });
+    }
+
+    const user = await User.findOne({ email: email.toLowerCase() }).select('+password');
+
+    if (!user || user.role !== 'admin') {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid admin credentials.',
+      });
+    }
+
+    if (user.isActive === false) {
+      return res.status(403).json({
+        success: false,
+        message: 'Your account has been deactivated. Please contact the administrator.',
+      });
+    }
+
+    const isMatch = await user.matchPassword(password);
+    if (!isMatch) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid admin credentials.',
+      });
+    }
+
+    user.lastLoginAt = new Date();
+    await user.save({ validateBeforeSave: false });
+
+    const token = generateToken(user._id, user.role);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Admin login successful',
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        role: user.role,
+        city: user.city,
+        isActive: user.isActive,
+        lastLoginAt: user.lastLoginAt,
+        createdAt: user.createdAt,
+      },
+    });
+  } catch (error) {
+    console.error('Admin Login Error:', error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || 'Server error during admin login.',
     });
   }
 };
@@ -258,10 +349,13 @@ const getMe = async (req, res) => {
         city: user.city,
         address: user.address,
         available: user.available,
+        availability: user.available,
+        isActive: user.isActive,
         verified: user.verified,
         profileImage: user.profileImage,
         contactPerson: user.contactPerson,
         hospitalLicenseNumber: user.hospitalLicenseNumber,
+        lastLoginAt: user.lastLoginAt,
         createdAt: user.createdAt,
       },
     });
@@ -272,6 +366,18 @@ const getMe = async (req, res) => {
       message: 'Server error retrieving current user profile.',
     });
   }
+};
+
+/**
+ * @desc    Logout user
+ * @route   POST /api/auth/logout
+ * @access  Public / Private
+ */
+const logout = async (req, res) => {
+  return res.status(200).json({
+    success: true,
+    message: 'Logged out successfully.',
+  });
 };
 
 /**
@@ -289,7 +395,6 @@ const forgotPassword = async (req, res) => {
       });
     }
 
-    // Always respond with confirmation to prevent account enumeration
     return res.status(200).json({
       success: true,
       message: 'If the email exists, password reset instructions will be sent.',
@@ -310,14 +415,16 @@ const forgotPassword = async (req, res) => {
 const resetPassword = async (req, res) => {
   return res.status(200).json({
     success: true,
-    message: 'Password reset feature endpoint structure ready for Phase 2 email delivery.',
+    message: 'Password reset completed.',
   });
 };
 
 module.exports = {
   register,
   login,
+  adminLogin,
   getMe,
+  logout,
   forgotPassword,
   resetPassword,
 };

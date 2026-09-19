@@ -1,14 +1,30 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import API from '../../services/api';
 import BloodGroupBadge from '../../components/BloodGroupBadge';
 import { FiClock, FiFileText } from 'react-icons/fi';
 
 const DonationHistory = () => {
-  const historyData = [
-    { id: 1, date: '15 Aug 2026', hospital: 'City Central Blood Bank', bloodGroup: 'O+', units: 1, status: 'Completed' },
-    { id: 2, date: '10 May 2026', hospital: 'Apollo Emergency Hub', bloodGroup: 'O+', units: 1, status: 'Completed' },
-    { id: 3, date: '14 Feb 2026', hospital: 'St. Jude Medical Center', bloodGroup: 'O+', units: 1, status: 'Completed' },
-    { id: 4, date: '01 Nov 2025', hospital: 'Fortis Healthcare Center', bloodGroup: 'O+', units: 1, status: 'Completed' },
-  ];
+  const [historyData, setHistoryData] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchHistory();
+  }, []);
+
+  const fetchHistory = async () => {
+    setLoading(true);
+    try {
+      const { data } = await API.get('/donations/my-history');
+      if (data.success) {
+        setHistoryData(data.donations || data.data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching donation history:', error);
+      setHistoryData([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="space-y-8">
@@ -17,18 +33,20 @@ const DonationHistory = () => {
           <h1 className="text-2xl font-extrabold text-slate-900">Donation History</h1>
           <p className="text-xs text-slate-500">Record of your past blood donations and contributions</p>
         </div>
-        <div className="w-10 h-10 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center">
+        <div className="w-10 h-10 rounded-xl bg-red-50 text-red-600 flex items-center justify-center">
           <FiClock className="w-5 h-5" />
         </div>
       </div>
 
       <div className="bg-white rounded-3xl border border-slate-200 shadow-xs overflow-hidden">
-        {historyData.length === 0 ? (
+        {loading ? (
+          <div className="py-16 text-center text-xs text-slate-400">Loading donation records...</div>
+        ) : historyData.length === 0 ? (
           <div className="py-16 text-center space-y-3">
             <FiFileText className="w-12 h-12 text-slate-300 mx-auto" />
-            <h3 className="text-base font-bold text-slate-700">No donation history yet</h3>
+            <h3 className="text-base font-bold text-slate-700">No donation records available.</h3>
             <p className="text-xs text-slate-500 max-w-sm mx-auto">
-              Your completed donations will automatically be logged here.
+              Your verified donations will automatically be logged here once completed.
             </p>
           </div>
         ) : (
@@ -45,16 +63,18 @@ const DonationHistory = () => {
               </thead>
               <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
                 {historyData.map((item) => (
-                  <tr key={item.id} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="p-4 font-bold text-slate-900">{item.date}</td>
-                    <td className="p-4">{item.hospital}</td>
+                  <tr key={item._id} className="hover:bg-slate-50/80 transition-colors">
+                    <td className="p-4 font-bold text-slate-900">
+                      {new Date(item.donationDate || item.createdAt).toLocaleDateString()}
+                    </td>
+                    <td className="p-4">{item.hospitalName || item.hospital?.name || 'General Facility'}</td>
                     <td className="p-4">
                       <BloodGroupBadge bloodGroup={item.bloodGroup} size="sm" />
                     </td>
-                    <td className="p-4">{item.units} Unit(s)</td>
+                    <td className="p-4">{item.units || 1} Unit(s)</td>
                     <td className="p-4">
-                      <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                        {item.status}
+                      <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 uppercase">
+                        {item.status || 'completed'}
                       </span>
                     </td>
                   </tr>
