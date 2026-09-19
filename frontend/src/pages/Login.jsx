@@ -5,7 +5,8 @@ import Input from '../components/Input';
 import PasswordInput from '../components/PasswordInput';
 import Button from '../components/Button';
 import Toast from '../components/Toast';
-import { FiMail, FiHeart, FiCheckCircle } from 'react-icons/fi';
+import RoleOrbit from '../components/RoleOrbit';
+import { FiMail, FiCheckCircle } from 'react-icons/fi';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -53,59 +54,46 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-slate-50">
+    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center py-10 px-4 sm:px-6 lg:px-8 bg-slate-950/5 relative overflow-hidden">
       {toast && <Toast type={toast.type} message={toast.message} onClose={() => setToast(null)} />}
 
-      <div className="w-full max-w-4xl bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-200 grid grid-cols-1 md:grid-cols-2">
+      <div className="w-full max-w-5xl bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200/80 grid grid-cols-1 lg:grid-cols-12 min-h-[580px]">
         
-        {/* Left Branding Visual Column */}
-        <div className="bg-gradient-to-br from-brand-700 via-brand-600 to-red-700 text-white p-8 sm:p-12 flex flex-col justify-between relative overflow-hidden hidden md:flex">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl pointer-events-none"></div>
+        {/* Left Visual Column with 3D Circular Role Orbit */}
+        <div className="lg:col-span-6 bg-slate-950 text-white p-8 flex flex-col justify-between relative overflow-hidden border-r border-slate-800">
+          <div className="absolute top-0 right-0 w-80 h-80 bg-brand-600/15 rounded-full blur-3xl pointer-events-none"></div>
+          <div className="absolute bottom-0 left-0 w-80 h-80 bg-blue-600/15 rounded-full blur-3xl pointer-events-none"></div>
 
-          <div className="space-y-4 relative z-10">
-            <Link to="/" className="inline-flex items-center gap-2">
-              <div className="w-10 h-10 rounded-xl bg-white text-brand-700 flex items-center justify-center font-bold text-xl shadow-md">
+          {/* Header */}
+          <div className="space-y-2 relative z-10">
+            <Link to="/" className="inline-flex items-center gap-2.5">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-500 to-red-600 text-white flex items-center justify-center font-bold text-xl shadow-md">
                 🩸
               </div>
-              <span className="text-2xl font-extrabold tracking-tight">BloodConnect</span>
+              <span className="text-2xl font-black tracking-tight text-white">BloodConnect</span>
             </Link>
-            <p className="text-brand-100 text-sm italic">"Every Drop Can Save a Life"</p>
+            <p className="text-xs text-slate-400 font-light">
+              Select your role or sign in directly to continue
+            </p>
           </div>
 
-          <div className="space-y-6 relative z-10 my-8">
-            <div className="space-y-2">
-              <h3 className="text-2xl font-bold">Saving lives starts with a single click.</h3>
-              <p className="text-xs text-brand-100 leading-relaxed">
-                Log in to access your donor dashboard, update availability status, or manage critical hospital blood requests.
-              </p>
-            </div>
-
-            <div className="space-y-3 pt-2 text-xs">
-              <div className="flex items-center gap-2">
-                <FiCheckCircle className="w-4 h-4 text-emerald-300" />
-                <span>Verified Hospital Emergency Network</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <FiCheckCircle className="w-4 h-4 text-emerald-300" />
-                <span>Encrypted JWT & Password Security</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <FiCheckCircle className="w-4 h-4 text-emerald-300" />
-                <span>24/7 Community Blood Matching</span>
-              </div>
-            </div>
+          {/* 3D CIRCULAR ROLE ORBIT COMPONENT */}
+          <div className="my-4 relative z-10 flex items-center justify-center">
+            <RoleOrbit />
           </div>
 
-          <div className="text-[11px] text-brand-200 border-t border-white/15 pt-4">
-            Need urgent assistance? Call toll-free 1800-123-BLOOD.
+          {/* Footer note */}
+          <div className="text-[11px] text-slate-400 border-t border-slate-800/80 pt-3 relative z-10 flex items-center justify-between">
+            <span>24/7 Emergency Blood Network</span>
+            <span className="text-brand-400 font-mono font-medium">Verified Security</span>
           </div>
         </div>
 
         {/* Right Form Column */}
-        <div className="p-8 sm:p-12 flex flex-col justify-center space-y-6">
-          <div className="space-y-1">
-            <h2 className="text-2xl font-extrabold text-slate-900">Welcome Back</h2>
-            <p className="text-xs text-slate-500">Sign in to continue to BloodConnect</p>
+        <div className="lg:col-span-6 p-8 sm:p-12 flex flex-col justify-center space-y-6 bg-white">
+          <div className="space-y-1.5">
+            <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">Welcome Back</h2>
+            <p className="text-xs sm:text-sm text-slate-500">Sign in to access your BloodConnect portal</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -131,7 +119,7 @@ const Login = () => {
             />
 
             <div className="flex items-center justify-between text-xs pt-1">
-              <label className="flex items-center gap-2 cursor-pointer text-slate-600">
+              <label className="flex items-center gap-2 cursor-pointer text-slate-600 font-medium">
                 <input
                   type="checkbox"
                   checked={rememberMe}
@@ -141,7 +129,7 @@ const Login = () => {
                 <span>Remember me</span>
               </label>
 
-              <Link to="/forgot-password" className="font-semibold text-brand-600 hover:text-brand-700">
+              <Link to="/forgot-password" className="font-bold text-brand-600 hover:text-brand-700">
                 Forgot Password?
               </Link>
             </div>
@@ -151,7 +139,7 @@ const Login = () => {
               loading={loading}
               fullWidth
               size="lg"
-              className="mt-2"
+              className="mt-2 shadow-md hover:shadow-brand-500/20"
             >
               {loading ? 'Signing in...' : 'Sign In'}
             </Button>
@@ -160,7 +148,7 @@ const Login = () => {
           <div className="text-center border-t border-slate-100 pt-6 text-xs text-slate-600 space-y-3">
             <div>
               <span>Don't have an account? </span>
-              <Link to="/register" className="font-bold text-brand-600 hover:text-brand-700 underline">
+              <Link to="/register" className="font-extrabold text-brand-600 hover:text-brand-700 underline">
                 Create Account
               </Link>
             </div>
@@ -170,7 +158,7 @@ const Login = () => {
                 to="/admin/login"
                 className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-900 text-white font-semibold text-xs hover:bg-slate-800 transition-colors shadow-xs"
               >
-                <span>🛡️</span>
+                <span>🔐</span>
                 <span>Admin Portal Login</span>
               </Link>
             </div>

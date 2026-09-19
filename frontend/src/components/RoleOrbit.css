@@ -1,0 +1,214 @@
+/* RoleOrbit.css - 3D Circular Orbit for BloodConnect Login */
+
+.role-orbit-viewport {
+  perspective: 1200px;
+  width: 100%;
+  height: 380px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: visible;
+}
+
+.role-orbit-scene {
+  position: relative;
+  width: 320px;
+  height: 320px;
+  transform-style: preserve-3d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Pause rotation on hover */
+.role-orbit-viewport:hover .role-orbit-card {
+  animation-play-state: paused;
+}
+
+/* Central Glowing Blood Drop */
+.role-orbit-center {
+  position: absolute;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #ff4d4d, #b91c1c, #450a0a);
+  box-shadow: 0 0 35px rgba(229, 37, 33, 0.8), 0 0 15px rgba(255, 255, 255, 0.4) inset;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+  animation: centerPulse 3s ease-in-out infinite;
+  border: 2 border-white/30;
+}
+
+.role-orbit-center-icon {
+  font-size: 32px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
+  animation: dropFloat 2s ease-in-out infinite alternate;
+}
+
+@keyframes centerPulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 30px rgba(229, 37, 33, 0.7), 0 0 12px rgba(255, 255, 255, 0.3) inset;
+  }
+  50% {
+    transform: scale(1.08);
+    box-shadow: 0 0 50px rgba(229, 37, 33, 0.95), 0 0 20px rgba(255, 255, 255, 0.6) inset;
+  }
+}
+
+@keyframes dropFloat {
+  0% { transform: translateY(-2px); }
+  100% { transform: translateY(2px); }
+}
+
+/* Base Card Style */
+.role-orbit-card {
+  position: absolute;
+  width: 150px;
+  height: 140px;
+  background: rgba(15, 23, 42, 0.92);
+  backdrop-filter: blur(16px);
+  border: 1.5px solid rgba(255, 255, 255, 0.15);
+  border-radius: 20px;
+  padding: 16px 12px;
+  display: flex;
+  flex-col: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: #ffffff;
+  cursor: pointer;
+  transform-style: preserve-3d;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  user-select: none;
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.5);
+}
+
+.role-orbit-card:hover {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 30px rgba(239, 68, 68, 0.7), 0 12px 25px rgba(0, 0, 0, 0.6) !important;
+  z-index: 50 !important;
+}
+
+.role-card-icon {
+  font-size: 28px;
+  margin-bottom: 6px;
+  line-height: 1;
+}
+
+.role-card-title {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #ffffff;
+  margin-bottom: 4px;
+}
+
+.role-card-desc {
+  font-size: 10px;
+  color: #94a3b8;
+  line-height: 1.3;
+  font-weight: 400;
+}
+
+/* 3D Orbit Animation Sequences */
+
+/* Donor Card Orbit Sequence */
+.orbit-donor {
+  animation: orbitDonor 12s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+}
+
+/* Hospital Card Orbit Sequence */
+.orbit-hospital {
+  animation: orbitHospital 12s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+}
+
+/* Admin Card Orbit Sequence */
+.orbit-admin {
+  animation: orbitAdmin 12s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+}
+
+/* Positions Keyframes:
+   Front (Position 0): translateY(100px) translateZ(120px) scale(1.15), opacity 1, z-index 30
+   Right-Back (Position 1): translateX(120px) translateY(-50px) translateZ(-100px) scale(0.80), opacity 0.65, z-index 10
+   Left-Back (Position 2): translateX(-120px) translateY(-50px) translateZ(-100px) scale(0.80), opacity 0.65, z-index 10
+*/
+
+@keyframes orbitDonor {
+  0%, 100% {
+    transform: translateX(0px) translateY(95px) translateZ(120px) scale(1.15);
+    opacity: 1;
+    z-index: 30;
+    border-color: rgba(239, 68, 68, 0.8);
+  }
+  33.33% {
+    transform: translateX(120px) translateY(-45px) translateZ(-100px) scale(0.80);
+    opacity: 0.65;
+    z-index: 10;
+    border-color: rgba(255, 255, 255, 0.15);
+  }
+  66.66% {
+    transform: translateX(-120px) translateY(-45px) translateZ(-100px) scale(0.80);
+    opacity: 0.65;
+    z-index: 10;
+    border-color: rgba(255, 255, 255, 0.15);
+  }
+}
+
+@keyframes orbitHospital {
+  0%, 100% {
+    transform: translateX(120px) translateY(-45px) translateZ(-100px) scale(0.80);
+    opacity: 0.65;
+    z-index: 10;
+    border-color: rgba(255, 255, 255, 0.15);
+  }
+  33.33% {
+    transform: translateX(-120px) translateY(-45px) translateZ(-100px) scale(0.80);
+    opacity: 0.65;
+    z-index: 10;
+    border-color: rgba(255, 255, 255, 0.15);
+  }
+  66.66% {
+    transform: translateX(0px) translateY(95px) translateZ(120px) scale(1.15);
+    opacity: 1;
+    z-index: 30;
+    border-color: rgba(59, 130, 246, 0.8);
+  }
+}
+
+@keyframes orbitAdmin {
+  0%, 100% {
+    transform: translateX(-120px) translateY(-45px) translateZ(-100px) scale(0.80);
+    opacity: 0.65;
+    z-index: 10;
+    border-color: rgba(255, 255, 255, 0.15);
+  }
+  33.33% {
+    transform: translateX(0px) translateY(95px) translateZ(120px) scale(1.15);
+    opacity: 1;
+    z-index: 30;
+    border-color: rgba(16, 185, 129, 0.8);
+  }
+  66.66% {
+    transform: translateX(120px) translateY(-45px) translateZ(-100px) scale(0.80);
+    opacity: 0.65;
+    z-index: 10;
+    border-color: rgba(255, 255, 255, 0.15);
+  }
+}
+
+/* Reduced Motion Override */
+@media (prefers-reduced-motion: reduce) {
+  .orbit-donor,
+  .orbit-hospital,
+  .orbit-admin {
+    animation: none !important;
+  }
+  .orbit-donor { transform: translateX(-110px) translateY(0) scale(1); opacity: 1; }
+  .orbit-hospital { transform: translateX(0) translateY(0) scale(1); opacity: 1; }
+  .orbit-admin { transform: translateX(110px) translateY(0) scale(1); opacity: 1; }
+}
