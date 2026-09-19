@@ -134,6 +134,25 @@ const register = async (req, res) => {
     }
   } catch (error) {
     console.error('Registration Error:', error);
+
+    // Handle Mongo Duplicate Key Error (E11000)
+    if (error.code === 11000) {
+      const field = Object.keys(error.keyValue || {})[0] || 'email';
+      return res.status(400).json({
+        success: false,
+        message: `An account with this ${field} already exists.`,
+      });
+    }
+
+    // Handle Mongoose Validation Error
+    if (error.name === 'ValidationError') {
+      const messages = Object.values(error.errors || {}).map((val) => val.message);
+      return res.status(400).json({
+        success: false,
+        message: messages.join('. ') || 'Validation error during registration.',
+      });
+    }
+
     return res.status(500).json({
       success: false,
       message: error.message || 'Server error during registration.',
