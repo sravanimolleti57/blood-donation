@@ -50,15 +50,31 @@ const DonorRequests = () => {
         API.get('/my-responses'),
       ]);
 
-      if (reqRes.data.success) {
-        const list = reqRes.data.bloodRequests || reqRes.data.data || [];
-        // Show active non-fulfilled and non-cancelled requests
-        const activeList = list.filter((r) => r.status !== 'fulfilled' && r.status !== 'cancelled');
-        setRequests(activeList);
+      let userResponses = [];
+      if (myRespRes.data.success) {
+        userResponses = myRespRes.data.responses || myRespRes.data.data || [];
+        setMyResponses(userResponses);
       }
 
-      if (myRespRes.data.success) {
-        setMyResponses(myRespRes.data.responses || myRespRes.data.data || []);
+      if (reqRes.data.success) {
+        const list = reqRes.data.bloodRequests || reqRes.data.data || [];
+        // Filter out fulfilled, cancelled, or requests where donor response is approved/accepted
+        const activeList = list.filter((r) => {
+          if (r.status === 'fulfilled' || r.status === 'cancelled') return false;
+
+          const existingResp = userResponses.find((resp) => {
+            const respReqId = resp.request?._id ? resp.request._id.toString() : resp.request?.toString();
+            const currentReqId = r._id ? r._id.toString() : r.toString();
+            return respReqId === currentReqId;
+          });
+
+          if (existingResp && (existingResp.status === 'approved' || existingResp.status === 'accepted')) {
+            return false;
+          }
+
+          return true;
+        });
+        setRequests(activeList);
       }
     } catch (error) {
       console.error('Error fetching blood requests or responses:', error);
@@ -150,9 +166,11 @@ const DonorRequests = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {requests.map((req) => {
-            const existingResponse = myResponses.find(
-              (r) => r.request?._id === req._id || r.request === req._id
-            );
+            const existingResponse = myResponses.find((r) => {
+              const respReqId = r.request?._id ? r.request._id.toString() : r.request?.toString();
+              const currentReqId = req._id ? req._id.toString() : req.toString();
+              return respReqId === currentReqId;
+            });
 
             return (
               <div

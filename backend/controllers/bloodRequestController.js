@@ -344,13 +344,9 @@ const verifyDonorResponse = async (req, res) => {
         notes: notes || `Admin verified and accepted response from donor.`,
       });
 
-      // Increment fulfilled units
+      // Increment fulfilled units and mark request as FULFILLED (CLOSED)
       bloodRequest.fulfilledUnits = (bloodRequest.fulfilledUnits || 0) + 1;
-
-      // Mark request as FULFILLED (CLOSED) if units requirement met
-      if (bloodRequest.fulfilledUnits >= bloodRequest.unitsRequired) {
-        bloodRequest.status = 'fulfilled';
-      }
+      bloodRequest.status = 'fulfilled';
     } else if (action === 'reject') {
       donorResponse.status = 'rejected';
       if (notes) donorResponse.notes = notes;
