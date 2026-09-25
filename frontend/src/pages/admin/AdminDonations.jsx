@@ -103,7 +103,7 @@ const AdminDonations = () => {
                       {donation.units} Unit(s)
                     </td>
                     <td className="py-4 px-4 font-medium text-slate-800">
-                      {donation.hospital?.name || donation.hospitalName || 'Local Medical Center'}
+                      {donation.hospital?.name || donation.hospitalName || 'N/A'}
                     </td>
                     <td className="py-4 px-4 text-slate-500 font-medium">
                       {donation.donationDate ? new Date(donation.donationDate).toLocaleDateString() : 'N/A'}
