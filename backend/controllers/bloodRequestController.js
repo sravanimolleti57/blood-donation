@@ -1,6 +1,7 @@
 const BloodRequest = require('../models/BloodRequest');
 const User = require('../models/User');
 const Donation = require('../models/Donation');
+const DonorResponse = require('../models/DonorResponse');
 
 /**
  * @desc    Create a new blood request
@@ -316,8 +317,20 @@ const verifyDonorResponse = async (req, res) => {
     }
 
     if (action === 'accept') {
-      donorResponse.status = 'accepted';
+      donorResponse.status = 'approved';
       if (notes) donorResponse.notes = notes;
+
+      // Update standalone DonorResponse collection document
+      await DonorResponse.findOneAndUpdate(
+        { request: bloodRequest._id, donor: donorResponse.donor },
+        {
+          status: 'approved',
+          eligibilityStatus: 'eligible',
+          reviewedBy: req.user._id,
+          reviewedAt: new Date(),
+          adminNotes: notes || '',
+        }
+      );
 
       // Create a completed Donation record in MongoDB
       await Donation.create({
@@ -341,6 +354,17 @@ const verifyDonorResponse = async (req, res) => {
     } else if (action === 'reject') {
       donorResponse.status = 'rejected';
       if (notes) donorResponse.notes = notes;
+
+      await DonorResponse.findOneAndUpdate(
+        { request: bloodRequest._id, donor: donorResponse.donor },
+        {
+          status: 'rejected',
+          eligibilityStatus: 'not_eligible',
+          reviewedBy: req.user._id,
+          reviewedAt: new Date(),
+          adminNotes: notes || '',
+        }
+      );
     }
 
     await bloodRequest.save();

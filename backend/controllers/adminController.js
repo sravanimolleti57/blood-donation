@@ -31,7 +31,7 @@ const getAdminDashboardStats = async (req, res) => {
     const fulfilledRequests = await BloodRequest.countDocuments({ status: 'fulfilled' });
 
     const pendingDonorResponses = await DonorResponse.countDocuments({ status: 'pending' });
-    const acceptedResponses = await DonorResponse.countDocuments({ status: 'accepted' });
+    const acceptedResponses = await DonorResponse.countDocuments({ status: { $in: ['accepted', 'approved'] } });
     const rejectedResponses = await DonorResponse.countDocuments({ status: 'rejected' });
 
     const totalDonations = await Donation.countDocuments();
@@ -53,7 +53,7 @@ const getAdminDashboardStats = async (req, res) => {
         activeBloodRequests,
         pendingBloodRequests,
         approvedBloodRequests,
-        fulfilledBloodRequests,
+        fulfilledBloodRequests: fulfilledRequests,
         fulfilledRequests,
         pendingDonorResponses,
         acceptedResponses,

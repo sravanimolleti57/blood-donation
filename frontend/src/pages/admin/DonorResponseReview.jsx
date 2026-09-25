@@ -142,7 +142,7 @@ const DonorResponseReview = () => {
 
         <span
           className={`px-3 py-1 rounded-full text-xs font-extrabold uppercase ${
-            response.status === 'accepted'
+            response.status === 'accepted' || response.status === 'approved'
               ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
               : response.status === 'rejected'
               ? 'bg-rose-100 text-rose-800 border border-rose-200'

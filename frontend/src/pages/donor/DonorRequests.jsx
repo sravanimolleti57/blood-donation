@@ -216,17 +216,17 @@ const DonorRequests = () => {
                   </span>
 
                   {existingResponse ? (
-                    existingResponse.status === 'accepted' ? (
+                    existingResponse.status === 'accepted' || existingResponse.status === 'approved' ? (
                       <span className="inline-flex items-center gap-1 px-3 py-1 bg-emerald-100 text-emerald-800 rounded-xl font-bold text-xs">
-                        <FiCheckCircle /> Response accepted
+                        <FiCheckCircle /> Response Approved
                       </span>
                     ) : existingResponse.status === 'rejected' ? (
                       <span className="inline-flex items-center gap-1 px-3 py-1 bg-rose-100 text-rose-800 rounded-xl font-bold text-xs">
-                        <FiXCircle /> Response rejected
+                        <FiXCircle /> Response Rejected
                       </span>
                     ) : (
                       <span className="inline-flex items-center gap-1 px-3 py-1 bg-amber-100 text-amber-800 rounded-xl font-bold text-[11px]">
-                        Waiting for admin review
+                        Waiting for Admin Approval
                       </span>
                     )
                   ) : (

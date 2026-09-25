@@ -374,6 +374,17 @@ const acceptDonorResponse = async (req, res) => {
     if (req.body.adminNotes) response.adminNotes = req.body.adminNotes;
     await response.save();
 
+    // Synchronize subdocument in bloodRequest responses array if present
+    if (bloodRequest && Array.isArray(bloodRequest.responses)) {
+      const subResp = bloodRequest.responses.find(
+        (r) => r.donor?.toString() === donorUser._id.toString()
+      );
+      if (subResp) {
+        subResp.status = 'approved';
+        if (req.body.adminNotes) subResp.notes = req.body.adminNotes;
+      }
+    }
+
     // Mark Blood Request Fulfilled (CLOSED)
     bloodRequest.fulfilledUnits = (bloodRequest.fulfilledUnits || 0) + 1;
     bloodRequest.status = 'fulfilled'; // Request is now fulfilled and closed
