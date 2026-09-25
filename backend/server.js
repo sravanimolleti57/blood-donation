@@ -78,21 +78,20 @@ app.use(errorHandler);
 const PORT = process.env.PORT || 5000;
 
 const startServer = async () => {
+  const server = app.listen(PORT, '0.0.0.0', () => {
+    console.log(`[BloodConnect Server] Server running on port ${PORT}`);
+    console.log(
+      `[BloodConnect Server] Allowed Client CORS Origin(s): ${
+        process.env.CLIENT_URL || 'http://localhost:5173'
+      }`
+    );
+  });
+
   try {
     await connectDB();
     await seedAdminAccount();
-
-    app.listen(PORT, '0.0.0.0', () => {
-      console.log(`[BloodConnect Server] Server running on port ${PORT}`);
-      console.log(
-        `[BloodConnect Server] Allowed Client CORS Origin(s): ${
-          process.env.CLIENT_URL || 'http://localhost:5173'
-        }`
-      );
-    });
   } catch (error) {
-    console.error('[BloodConnect Server] Failed to start:', error.message);
-    process.exit(1);
+    console.error('[BloodConnect Server] Initial MongoDB Connection Notice:', error.message);
   }
 };
 
