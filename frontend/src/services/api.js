@@ -1,18 +1,26 @@
 import axios from 'axios';
 
 const getBaseURL = () => {
-  if (import.meta.env.VITE_API_URL) {
-    return import.meta.env.VITE_API_URL;
+  const envUrl = import.meta.env.VITE_API_URL;
+  const isBrowser = typeof window !== 'undefined';
+  const isNonLocalhost =
+    isBrowser && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+
+  // If VITE_API_URL is explicitly set:
+  if (envUrl) {
+    // Prevent localhost:5000 from being hardcoded into production builds deployed on Vercel or remote host
+    if ((import.meta.env.PROD || isNonLocalhost) && envUrl.includes('localhost:5000')) {
+      return '/api';
+    }
+    return envUrl.replace(/\/$/, '');
   }
-  // In production or deployed web environments without explicit VITE_API_URL, default to relative /api
-  if (
-    import.meta.env.PROD ||
-    (typeof window !== 'undefined' &&
-      window.location.hostname !== 'localhost' &&
-      window.location.hostname !== '127.0.0.1')
-  ) {
+
+  // Default for production / deployed non-localhost web environments:
+  if (import.meta.env.PROD || isNonLocalhost) {
     return '/api';
   }
+
+  // Default for local development:
   return 'http://localhost:5000/api';
 };
 
