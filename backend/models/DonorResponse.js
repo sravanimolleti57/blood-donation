@@ -62,13 +62,13 @@ const donorResponseSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['pending', 'accepted', 'approved', 'rejected'],
-      default: 'pending',
+      enum: ['pending', 'accepted', 'approved', 'rejected', 'responded'],
+      default: 'responded',
     },
     eligibilityStatus: {
       type: String,
-      enum: ['pending', 'eligible', 'not_eligible'],
-      default: 'pending',
+      enum: ['pending', 'eligible', 'not_eligible', 'responded'],
+      default: 'responded',
     },
     adminNotes: {
       type: String,

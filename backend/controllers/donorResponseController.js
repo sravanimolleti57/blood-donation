@@ -121,8 +121,8 @@ const respondToBloodRequest = async (req, res) => {
       phone,
       healthDeclaration: true,
       additionalNotes: additionalNotes || '',
-      status: 'pending',
-      eligibilityStatus: 'pending',
+      status: 'responded',
+      eligibilityStatus: 'responded',
     });
 
     const populatedResponse = await DonorResponse.findById(newResponse._id)
@@ -131,7 +131,7 @@ const respondToBloodRequest = async (req, res) => {
 
     return res.status(201).json({
       success: true,
-      message: 'Response submitted for admin review',
+      message: 'Response submitted successfully.',
       data: populatedResponse,
       donorResponse: populatedResponse,
     });

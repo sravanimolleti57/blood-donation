@@ -140,16 +140,8 @@ const DonorResponseReview = () => {
           <FiArrowLeft className="w-4 h-4" /> Back to Donor Management
         </button>
 
-        <span
-          className={`px-3 py-1 rounded-full text-xs font-extrabold uppercase ${
-            response.status === 'accepted' || response.status === 'approved'
-              ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
-              : response.status === 'rejected'
-              ? 'bg-rose-100 text-rose-800 border border-rose-200'
-              : 'bg-amber-100 text-amber-800 border border-amber-200'
-          }`}
-        >
-          RESPONSE STATUS: {response.status}
+        <span className="px-3 py-1 rounded-full text-xs font-extrabold uppercase bg-emerald-100 text-emerald-800 border border-emerald-200">
+          RESPONSE STATUS: RESPONDED
         </span>
       </div>
 
@@ -355,42 +347,7 @@ const DonorResponseReview = () => {
         </div>
       </div>
 
-      {/* Admin Notes & Decision Action Section */}
-      {response.status === 'pending' && (
-        <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-xs space-y-4">
-          <h2 className="text-base font-bold text-slate-900">Admin Final Acceptance Decision</h2>
-          <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">
-              Admin Notes / Verification Decision Notes (Optional)
-            </label>
-            <textarea
-              rows={2}
-              placeholder="Add optional notes for the donor or hospital record..."
-              value={adminNotes}
-              onChange={(e) => setAdminNotes(e.target.value)}
-              className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500"
-            />
-          </div>
 
-          <div className="flex flex-col sm:flex-row items-center justify-end gap-3 pt-2">
-            <button
-              onClick={handleReject}
-              disabled={submitting}
-              className="w-full sm:w-auto px-6 py-3 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-2xl text-xs font-bold transition-all border border-rose-200"
-            >
-              REJECT RESPONSE
-            </button>
-
-            <button
-              onClick={handleAccept}
-              disabled={submitting}
-              className="w-full sm:w-auto px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl text-xs font-bold transition-all shadow-md"
-            >
-              {submitting ? 'Processing Approval...' : 'APPROVE DONATION'}
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

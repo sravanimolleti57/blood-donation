@@ -58,22 +58,8 @@ const DonorRequests = () => {
 
       if (reqRes.data.success) {
         const list = reqRes.data.bloodRequests || reqRes.data.data || [];
-        // Filter out fulfilled, cancelled, or requests where donor response is approved/accepted
-        const activeList = list.filter((r) => {
-          if (r.status === 'fulfilled' || r.status === 'cancelled') return false;
-
-          const existingResp = userResponses.find((resp) => {
-            const respReqId = resp.request?._id ? resp.request._id.toString() : resp.request?.toString();
-            const currentReqId = r._id ? r._id.toString() : r.toString();
-            return respReqId === currentReqId;
-          });
-
-          if (existingResp && (existingResp.status === 'approved' || existingResp.status === 'accepted')) {
-            return false;
-          }
-
-          return true;
-        });
+        // Keep active non-fulfilled and non-cancelled requests
+        const activeList = list.filter((r) => r.status !== 'fulfilled' && r.status !== 'cancelled');
         setRequests(activeList);
       }
     } catch (error) {
@@ -234,19 +220,9 @@ const DonorRequests = () => {
                   </span>
 
                   {existingResponse ? (
-                    existingResponse.status === 'accepted' || existingResponse.status === 'approved' ? (
-                      <span className="inline-flex items-center gap-1 px-3 py-1 bg-emerald-100 text-emerald-800 rounded-xl font-bold text-xs">
-                        <FiCheckCircle /> Response Approved
-                      </span>
-                    ) : existingResponse.status === 'rejected' ? (
-                      <span className="inline-flex items-center gap-1 px-3 py-1 bg-rose-100 text-rose-800 rounded-xl font-bold text-xs">
-                        <FiXCircle /> Response Rejected
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 px-3 py-1 bg-amber-100 text-amber-800 rounded-xl font-bold text-[11px]">
-                        Waiting for Admin Approval
-                      </span>
-                    )
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-100 text-emerald-800 rounded-xl font-bold text-xs border border-emerald-200">
+                      <FiCheckCircle className="w-3.5 h-3.5 text-emerald-600" /> RESPONDED
+                    </span>
                   ) : (
                     <Button size="sm" onClick={() => handleOpenRespondModal(req)}>
                       RESPOND
