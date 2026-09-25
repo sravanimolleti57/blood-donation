@@ -6,6 +6,8 @@ const connectDB = require('./config/db');
 const seedAdminAccount = require('./utils/seedAdmin');
 const { notFound, errorHandler } = require('./middleware/errorMiddleware');
 
+const mongoose = require('mongoose');
+
 const app = express();
 
 // Configure CORS for local development and deployed frontend URLs
@@ -28,6 +30,19 @@ app.use(
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Ensure database connection for incoming requests (serverless & standalone)
+app.use(async (req, res, next) => {
+  try {
+    if (mongoose.connection.readyState === 0) {
+      await connectDB();
+      await seedAdminAccount();
+    }
+    next();
+  } catch (error) {
+    next(error);
+  }
+});
 
 // Root health check endpoint
 app.get('/', (req, res) => {
@@ -73,4 +88,8 @@ const startServer = async () => {
   }
 };
 
-startServer();
+if (require.main === module) {
+  startServer();
+}
+
+module.exports = app;

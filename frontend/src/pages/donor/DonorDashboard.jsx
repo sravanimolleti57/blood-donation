@@ -8,7 +8,6 @@ import AnimatedCounter from '../../components/ui/AnimatedCounter';
 import TiltCard from '../../components/ui/TiltCard';
 import BloodParticles from '../../components/3d/BloodParticles';
 import BloodOrb from '../../components/3d/BloodOrb';
-import BloodFlowAnimation from '../../components/BloodFlowAnimation';
 import API from '../../services/api';
 import {
   FiHeart,
@@ -144,12 +143,6 @@ const DonorDashboard = () => {
           </div>
         </div>
       </div>
-
-      {/* CONTINUOUS BLOOD FLOW ANIMATION VISUALIZATION */}
-      <BloodFlowAnimation
-        bloodGroup={user?.bloodGroup}
-        isAvailable={user?.available}
-      />
 
       {/* Statistics Cards with 3D Hover & Counters */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
