@@ -265,7 +265,10 @@ const adminLogin = async (req, res) => {
       });
     }
 
-    const user = await User.findOne({ email: email.toLowerCase() }).select('+password');
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanPassword = password.trim();
+
+    const user = await User.findOne({ email: cleanEmail }).select('+password');
 
     if (!user || user.role !== 'admin') {
       return res.status(401).json({
@@ -281,7 +284,7 @@ const adminLogin = async (req, res) => {
       });
     }
 
-    const isMatch = await user.matchPassword(password);
+    const isMatch = await user.matchPassword(cleanPassword);
     if (!isMatch) {
       return res.status(401).json({
         success: false,
