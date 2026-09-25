@@ -53,6 +53,14 @@ app.get('/', (req, res) => {
   });
 });
 
+app.get('/api', (req, res) => {
+  res.json({
+    success: true,
+    message: 'BloodConnect API Service is live and running.',
+    version: '1.0.0',
+  });
+});
+
 // Register API Routes
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/users', require('./routes/userRoutes'));
