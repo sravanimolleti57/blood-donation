@@ -181,8 +181,11 @@ const login = async (req, res) => {
       });
     }
 
+    const cleanEmail = email ? email.trim().toLowerCase() : '';
+    const cleanPassword = password ? password.trim() : '';
+
     // Find user & include password field
-    const user = await User.findOne({ email: email.toLowerCase() }).select('+password');
+    const user = await User.findOne({ email: cleanEmail }).select('+password');
 
     if (!user) {
       return res.status(401).json({
@@ -200,7 +203,7 @@ const login = async (req, res) => {
     }
 
     // Match password
-    const isMatch = await user.matchPassword(password);
+    const isMatch = await user.matchPassword(cleanPassword);
     if (!isMatch) {
       return res.status(401).json({
         success: false,
