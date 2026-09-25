@@ -82,7 +82,7 @@ const startServer = async () => {
     await connectDB();
     await seedAdminAccount();
 
-    app.listen(PORT, () => {
+    app.listen(PORT, '0.0.0.0', () => {
       console.log(`[BloodConnect Server] Server running on port ${PORT}`);
       console.log(
         `[BloodConnect Server] Allowed Client CORS Origin(s): ${
